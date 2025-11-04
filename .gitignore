@@ -1,0 +1,17 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/kakia-talesweaver-emulator/obj
+/kakia-talesweaver-logging/obj
+/kakia-talesweaver-network/obj
+/kakia-talesweaver-packets/obj
+/kakia-talesweaver-utils/obj
+/kakia-talesweaver-network/Cryptography/keyblob.bin
+/kakia-talesweaver-emulator/bin/Debug/net10.0
+/kakia-talesweaver-emulator/bin/Release/net10.0
+/kakia-talesweaver-logging/bin
+/kakia-talesweaver-network/bin
+/kakia-talesweaver-packets/bin
+/kakia-talesweaver-utils/bin

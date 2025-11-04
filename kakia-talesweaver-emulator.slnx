@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="kakia-talesweaver-emulator/kakia-talesweaver-emulator.csproj" />
+  <Project Path="kakia-talesweaver-logging/kakia-talesweaver-logging.csproj" />
+  <Project Path="kakia-talesweaver-network/kakia-talesweaver-network.csproj" />
+  <Project Path="kakia-talesweaver-packets/kakia-talesweaver-packets.csproj" />
+  <Project Path="kakia-talesweaver-utils/kakia-talesweaver-utils.csproj" />
+</Solution>
