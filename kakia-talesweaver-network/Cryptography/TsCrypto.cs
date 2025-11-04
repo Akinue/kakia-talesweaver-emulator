@@ -86,14 +86,10 @@ public class TsCrypto
 			packetBuffOut[i] = (byte)v10;
 		}
 
-		byte[] finalPacket = new byte[packetLen + 4];
-		finalPacket[0] = 0xAA;
-		int lenField = (packetBuffOut.Length + 1);
-		finalPacket[1] = (byte)((lenField >> 8) & 0xFF);
-		finalPacket[2] = (byte)(lenField & 0xFF);
-		finalPacket[3] = (byte)(sendIndex & 0xFF);
+		byte[] finalPacket = new byte[packetLen + 1];
+		finalPacket[0] = (byte)(sendIndex & 0xFF);
 
-		Array.Copy(packetBuffOut, 0, finalPacket, 4, packetBuffOut.Length);
+		Array.Copy(packetBuffOut, 0, finalPacket, 1, packetBuffOut.Length);
 		return finalPacket;
 	}
 

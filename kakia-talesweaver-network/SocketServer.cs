@@ -25,7 +25,7 @@ public abstract class SocketServer
 			_server.Listen(0xFFFF);
 			_server.NoDelay = true;
 
-			Logger.Log($"Server is listning on {_host}:{_port}");
+			Logger.Log($"Server is listening on {_host}:{_port}");
 
 			while (!token.IsCancellationRequested)
 			{

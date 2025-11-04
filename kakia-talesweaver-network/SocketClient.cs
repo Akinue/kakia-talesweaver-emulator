@@ -1,4 +1,7 @@
 ﻿using kakia_talesweaver_logging;
+using kakia_talesweaver_network.Cryptography;
+using kakia_talesweaver_utils;
+using kakia_talesweaver_utils.Extensions;
 using System.Net;
 using System.Net.Sockets;
 
@@ -10,11 +13,10 @@ public class SocketClient
 
 	public int Id { get; set; }
 	public bool IsAlive { get; set; }
-	public bool UseCrypto { get; set; }	
-
 	private Socket _socket { get; set; }
 	private byte[] _buffer { get; set; }
 	private int _position = 0;
+	private CryptoHandler _cryptoHandler = new();
 
 	public SocketClient(Socket socket)
 	{
@@ -48,12 +50,11 @@ public class SocketClient
 	private async Task HandleData(int len)
 	{
 		try
-		{
-			/*
-			var packets = RawPacket.ParsePackets(_buffer[_position..len], UseCrypto);
+		{			
+			var packets = RawPacket.ParsePackets(_buffer[_position..len], _cryptoHandler);
 			foreach (var packet in packets)
 				await PacketReceived!.Invoke(packet);
-			*/
+			
 		}
 		catch (Exception ex)
 		{
@@ -64,7 +65,16 @@ public class SocketClient
 
 	public async Task Send(byte[] packet)
 	{
-		await _socket.SendAsync(packet);
+		if (_cryptoHandler.IsEncrypted)
+			packet = _cryptoHandler.Encrypt(packet)!;
+
+		using PacketWriter pw = new();
+		pw.WritePacket(packet);
+
+		var temp = pw.ToArray();
+		Logger.Log($"Sending {temp.Length} bytes to {GetIP()}:{Environment.NewLine}{temp.ToFormatedHexString()}");
+
+		await _socket.SendAsync(pw.ToArray());
 	}
 
 	public string GetIP()

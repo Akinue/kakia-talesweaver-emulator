@@ -8,4 +8,11 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\kakia-talesweaver-logging\kakia-talesweaver-logging.csproj" />
+    <ProjectReference Include="..\kakia-talesweaver-network\kakia-talesweaver-network.csproj" />
+    <ProjectReference Include="..\kakia-talesweaver-packets\kakia-talesweaver-packets.csproj" />
+    <ProjectReference Include="..\kakia-talesweaver-utils\kakia-talesweaver-utils.csproj" />
+  </ItemGroup>
+
 </Project>

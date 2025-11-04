@@ -7,4 +7,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\kakia-talesweaver-utils\kakia-talesweaver-utils.csproj" />
+  </ItemGroup>
+
 </Project>
