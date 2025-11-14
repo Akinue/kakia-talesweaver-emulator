@@ -1,5 +1,6 @@
 ﻿using kakia_talesweaver_emulator.Models;
 using kakia_talesweaver_network;
+using kakia_talesweaver_packets.Models;
 using kakia_talesweaver_packets.Packets;
 using System.Collections.Concurrent;
 
@@ -12,10 +13,7 @@ public class TalesServer : SocketServer
 	public ConcurrentDictionary<string, IPlayerClient> ConnectedPlayers { get; } = new();
 	public ConcurrentDictionary<uint, string> AccountSessions { get; set; }
 	private ServerType _serverType = ServerType.Login;
-	public static Dictionary<int, List<byte[]>> NPCs = new()
-	{
-		{ 1, new List<byte[]>() }
-	};
+	public static Dictionary<string, MapInfo> Maps = new();
 
 	public static ServerListPacket ServerList { get; } = new()
 	{
@@ -37,11 +35,20 @@ public class TalesServer : SocketServer
 		_serverType = serverType;
 		AccountSessions = accountSessions;
 
-		var npcFiles = Directory.GetFiles("NPCs", "*.bin");
-		foreach (var npcFile in npcFiles)
+		var maps = Directory.GetDirectories("Maps");
+
+
+		foreach (var map in maps)
 		{
-			var npcData = File.ReadAllBytes(npcFile);
-			NPCs[1].Add(npcData);
+			var zones = Directory.GetDirectories(map);
+			foreach (var zone in zones)
+		{
+				var mapInfo = new MapInfo(zone);
+				string key = $"{mapInfo.MapId}-{mapInfo.ZoneId}";
+
+				if (!Maps.ContainsKey(key))
+					Maps.Add(key, mapInfo);
+			}
 		}
 	}
 
@@ -50,7 +57,7 @@ public class TalesServer : SocketServer
 		var pc = new PlayerClient(s, _serverType, this);
 		if (_serverType == ServerType.Login) return;
 
-		ConnectedPlayers.AddOrUpdate(s.GetIP(), pc, (_, _) => pc);
+		ConnectedPlayers.AddOrUpdate(Guid.NewGuid().ToString(), pc, (_, _) => pc);
 	}
 
 	public void Broadcast(IPlayerClient sender, byte[] data, bool includeSelf, CancellationToken ct)

@@ -8,6 +8,11 @@ public class TsPoint
 	public ushort Y { get; set; }
 
 	public TsPoint() { }
+
+	public TsPoint Copy()
+	{
+		return new TsPoint(X, Y);
+	}
 	public TsPoint(ushort x, ushort y)
 	{
 		X = x;

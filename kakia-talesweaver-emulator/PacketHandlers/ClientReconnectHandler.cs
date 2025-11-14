@@ -35,17 +35,21 @@ public class ClientReconnectHandler : PacketHandler
 
 	public void SendToWorld(IPlayerClient client, RawPacket p)
 	{
+		client.SetCharacter();
+		client.LoadMap(TalesServer.Maps["6-38656"], CancellationToken.None);
+
+		/*
 		client.Send("15 00 06 97 00 00 00 04".ToByteArray(), CancellationToken.None).Wait();
 
-		client.SetCharacter();
+		
 		var cChar = client.GetCharacter();
 
 		client.Send(cChar.SpawnCharacterPacket.ToBytes(SetAsOther: false), CancellationToken.None).Wait();
 		client.Broadcast(cChar.SpawnCharacterPacket.ToBytes(SetAsOther: true), false);
 		client.Send(new InitObjectIdPacket(cChar.Id).ToBytes(), CancellationToken.None).Wait();
 
-		client.Send(@"4D 00 00 00 01 00 2D E8 A7 00 01 00 01 01 00 00
-00 00 00 00 00 00 00 00 00 00 00".ToByteArray(), CancellationToken.None).Wait();
+		client.Send(@"4D 00 00 01 01 00 2D CF 94 00 01 00 01 01 00 00
+00 00 00 00 00 00 00 00 00 00 00 ".ToByteArray(), CancellationToken.None).Wait();
 
 		
 		foreach (var npc in TalesServer.NPCs[1] )
@@ -53,15 +57,17 @@ public class ClientReconnectHandler : PacketHandler
 			client.Send(npc.ToArray(), CancellationToken.None).Wait();
 		}
 
+		
 		foreach (var player in client.GetServer().ConnectedPlayers.Values)
 		{
-			if (player == client)
+			if (player == client || string.IsNullOrEmpty(player.GetCharacter().Name))
 				continue;
 
 			client.Send(player.GetCharacter()
 				.SpawnCharacterPacket
 				.ToBytes(SetAsOther: true), CancellationToken.None).Wait();
 		}
+		*/
 	}
 
 

@@ -28,6 +28,11 @@ public class MovementHandler : PacketHandler
 			Direction = movement.Direction
 		};
 		character.Position = movement.Position;
+
+		// temporary fix for spawn position desync after movement
+		character.SpawnCharacterPacket.Movement.XPos = movement.Position.X;
+		character.SpawnCharacterPacket.Movement.YPos = movement.Position.Y;
+
 		client.Broadcast(movePacket.ToBytes());
 	}
 }
