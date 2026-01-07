@@ -9,8 +9,6 @@ namespace Kakia.TW.World.Managers
 {
 	public class WorldManager
 	{
-		private int _nextEntityId = 1_000_000;
-
 		/// <summary>
 		/// Returns a reference to a collection of maps in the world.
 		/// </summary>
@@ -21,19 +19,26 @@ namespace Kakia.TW.World.Managers
 		/// </summary>
 		public Heartbeat Heartbeat { get; } = new Heartbeat();
 
-		/// <summary>
-		/// Generates a unique runtime Entity ID in a thread-safe manner.
-		/// Used for Monsters, NPCs, Warps, and Item Drops.
-		/// </summary>
-		public uint GetNextEntityId()
-		{
-			return (uint)Interlocked.Increment(ref _nextEntityId);
-		}
-
 		public bool TryGetPlayer(uint id, out Player player)
 		{
 			// Search via MapManager or a global dictionary
 			return Maps.TryGetPlayer(id, out player);
+		}
+
+		/// <summary>
+		/// Tries to find a player by their character name.
+		/// </summary>
+		public bool TryGetPlayerByName(string name, out Player? player)
+		{
+			return Maps.TryGetPlayerByName(name, out player);
+		}
+
+		/// <summary>
+		/// Gets the total number of characters currently online.
+		/// </summary>
+		public int GetCharacterCount()
+		{
+			return Maps.GetPlayerCount();
 		}
 
 		/// <summary>

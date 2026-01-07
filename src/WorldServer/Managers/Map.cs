@@ -6,6 +6,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace Kakia.TW.World.Managers
 {
@@ -14,13 +15,19 @@ namespace Kakia.TW.World.Managers
 		public ushort MapId { get; }
 		public ushort ZoneId { get; }
 
-		// Thread-safe collections for entities
+		// Thread-safe collections for entities by ObjectId
 		private readonly ConcurrentDictionary<uint, Player> _players = new();
 		private readonly ConcurrentDictionary<uint, ItemEntity> _items = new();
 		private readonly ConcurrentDictionary<uint, Npc> _npcs = new();
 		private readonly ConcurrentDictionary<uint, Monster> _monsters = new();
 		private readonly ConcurrentDictionary<uint, Warp> _warps = new();
 		private readonly List<Spawner> _spawners = new();
+
+		// Object ID counter - starts at 0, increments for each entity
+		private uint _nextObjectId = 0;
+
+		// Unified entity lookup by ObjectId (all entity types)
+		private readonly ConcurrentDictionary<uint, Entity> _entities = new();
 
 		// Raw entity packets loaded from .bin files (sent directly to clients)
 		private List<byte[]> _rawEntityPackets = new();
@@ -29,6 +36,84 @@ namespace Kakia.TW.World.Managers
 		{
 			MapId = mapId;
 			ZoneId = zoneId;
+		}
+
+		/// <summary>
+		/// Generates the next object ID for this map. Thread-safe.
+		/// </summary>
+		private uint GetNextObjectId()
+		{
+			return Interlocked.Increment(ref _nextObjectId);
+		}
+
+		/// <summary>
+		/// Assigns an object ID and registers entity in unified lookup.
+		/// </summary>
+		private void RegisterEntity(Entity entity)
+		{
+			entity.ObjectId = GetNextObjectId();
+			entity.Instance = this;
+			_entities.TryAdd(entity.ObjectId, entity);
+		}
+
+		/// <summary>
+		/// Removes entity from unified lookup.
+		/// </summary>
+		private void UnregisterEntity(Entity entity)
+		{
+			_entities.TryRemove(entity.ObjectId, out _);
+			entity.Instance = null;
+		}
+
+		/// <summary>
+		/// Unified entity lookup by ObjectId.
+		/// </summary>
+		public bool TryGetEntity(uint objectId, out Entity? entity)
+		{
+			return _entities.TryGetValue(objectId, out entity);
+		}
+
+		/// <summary>
+		/// Typed entity lookup by ObjectId.
+		/// </summary>
+		public bool TryGetEntity<T>(uint objectId, out T? entity) where T : Entity
+		{
+			if (_entities.TryGetValue(objectId, out var e) && e is T typed)
+			{
+				entity = typed;
+				return true;
+			}
+			entity = default;
+			return false;
+		}
+
+		/// <summary>
+		/// Removes any entity by ObjectId and broadcasts despawn.
+		/// </summary>
+		public bool RemoveEntity(uint objectId)
+		{
+			if (!_entities.TryRemove(objectId, out var entity))
+				return false;
+
+			// Remove from type-specific collection
+			switch (entity)
+			{
+				case Player p: _players.TryRemove(p.ObjectId, out _); break;
+				case Npc n: _npcs.TryRemove(n.ObjectId, out _); break;
+				case Monster m: _monsters.TryRemove(m.ObjectId, out _); break;
+				case Warp w: _warps.TryRemove(w.ObjectId, out _); break;
+				case ItemEntity i: _items.TryRemove(i.ObjectId, out _); break;
+			}
+
+			entity.Instance = null;
+
+			// Broadcast despawn to all players
+			foreach (var player in _players.Values)
+			{
+				Send.EntityRemove(player.Connection, objectId);
+			}
+
+			return true;
 		}
 
 		/// <summary>
@@ -58,16 +143,18 @@ namespace Kakia.TW.World.Managers
 
 		public void Enter(Entity entity)
 		{
+			// Assign ObjectId via RegisterEntity
+			RegisterEntity(entity);
+
 			if (entity is Player p)
 			{
-				if (_players.TryAdd(p.Id, p))
+				if (_players.TryAdd(p.ObjectId, p))
 				{
-					p.Instance = this;
 					Send.MapChange(p.Connection, MapId, ZoneId);
 
-					// Spawn existing entities for the player
-					foreach (var m in _monsters.Values) Send.SpawnNpc(p.Connection, m.Id, m.ModelId, m.ObjectPos.Position, m.Direction);
-					foreach (var w in _warps.Values) Send.SpawnPortal(p.Connection, new WarpPortal { Id = w.Id, MinPoint = w.ObjectPos.Position, DestMapId = w.DestMapId, DestPortalId = 1 });
+					// Spawn existing entities for the player using ObjectId
+					foreach (var m in _monsters.Values) Send.SpawnNpc(p.Connection, m.ObjectId, m.ModelId, m.ObjectPos.Position, m.Direction);
+					foreach (var w in _warps.Values) Send.SpawnPortal(p.Connection, new WarpPortal { Id = w.ObjectId, MinPoint = w.ObjectPos.Position, DestMapId = w.DestMapId, DestPortalId = 1 });
 
 					// Spawn this player for others
 					Broadcast(p, () =>
@@ -80,7 +167,7 @@ namespace Kakia.TW.World.Managers
 			}
 			else if (entity is Monster m)
 			{
-				if (_monsters.TryAdd(m.Id, m))
+				if (_monsters.TryAdd(m.ObjectId, m))
 				{
 					Broadcast(m, () =>
 					{
@@ -88,7 +175,7 @@ namespace Kakia.TW.World.Managers
 						// Using Send.EntitySpawnNpc logic inline or via helper
 						pkt.PutByte((byte)WorldPacketId.Spawn); // 0 Spawn
 						pkt.PutByte(0x02); // Type 2: Monster/NPC
-						pkt.PutUInt(m.Id);
+						pkt.PutUInt(m.ObjectId);
 						pkt.PutUInt(m.ModelId);
 						pkt.PutUInt(0); // Unk
 						pkt.PutUInt(0); // Unk
@@ -101,7 +188,7 @@ namespace Kakia.TW.World.Managers
 			}
 			else if (entity is Warp w)
 			{
-				_warps.TryAdd(w.Id, w);
+				_warps.TryAdd(w.ObjectId, w);
 				// Warps are usually static, so we might not broadcast spawn if added during load,
 				// but if added dynamically:
 				Broadcast(w, () =>
@@ -109,7 +196,7 @@ namespace Kakia.TW.World.Managers
 					var pkt = new Packet(Op.WorldResponse);
 					pkt.PutByte((byte)WorldPacketId.Spawn);
 					pkt.PutByte(0x04); // Type 4: Portal
-					pkt.PutUInt(w.Id);
+					pkt.PutUInt(w.ObjectId);
 					pkt.PutUShort(w.ObjectPos.Position.X);
 					pkt.PutUShort(w.ObjectPos.Position.Y);
 					pkt.PutUShort(w.DestMapId);
@@ -121,17 +208,18 @@ namespace Kakia.TW.World.Managers
 
 		public void Enter(Player player)
 		{
-			if (_players.TryAdd(player.Id, player))
-			{
-				player.Instance = this;
+			// Assign ObjectId via RegisterEntity
+			RegisterEntity(player);
 
+			if (_players.TryAdd(player.ObjectId, player))
+			{
 				// 1. Send Map Change Packet to Player
 				Send.MapChange(player.Connection, MapId, ZoneId);
 
 				// 2. Notify Player about existing entities
 				foreach (var existingPlayer in _players.Values)
 				{
-					if (existingPlayer.Id == player.Id) continue;
+					if (existingPlayer.ObjectId == player.ObjectId) continue;
 					// Send existing player to new player
 					Send.SpawnUser(player.Connection, existingPlayer.Data, false);
 					// Send new player to existing player
@@ -143,33 +231,34 @@ namespace Kakia.TW.World.Managers
 					Send.SpawnItem(player.Connection, item.ItemData, item.ObjectPos.Position, item.OwnerId);
 				}
 
-				// Send existing NPCs to new player
+				// Send existing NPCs to new player using ObjectId
 				foreach (var npc in _npcs.Values)
 				{
-					Send.SpawnNpc(player.Connection, npc.Id, npc.ModelId, npc.ObjectPos.Position, npc.Direction);
+					Send.SpawnNpc(player.Connection, npc.ObjectId, npc.ModelId, npc.ObjectPos.Position, npc.Direction);
 				}
 
-				// Send existing monsters to new player
+				// Send existing monsters to new player using ObjectId
 				foreach (var monster in _monsters.Values)
 				{
-					Send.SpawnNpc(player.Connection, monster.Id, monster.ModelId, monster.ObjectPos.Position, monster.Direction);
+					Send.SpawnNpc(player.Connection, monster.ObjectId, monster.ModelId, monster.ObjectPos.Position, monster.Direction);
 				}
 			}
 		}
 
 		public void Leave(Player player)
 		{
-			if (_players.TryRemove(player.Id, out _))
+			if (_players.TryRemove(player.ObjectId, out _))
 			{
-				player.Instance = null;
-				// Broadcast removal to others
+				// Broadcast removal to others using ObjectId
 				Broadcast(player, () =>
 				{
 					var p = new Packet(Op.WorldResponse);
 					p.PutByte((byte)WorldPacketId.Despawn);
-					p.PutUInt(player.Id);
+					p.PutUInt(player.ObjectId);
 					return p;
 				}, includeSelf: false);
+
+				UnregisterEntity(player);
 			}
 		}
 
@@ -177,13 +266,14 @@ namespace Kakia.TW.World.Managers
 		{
 			if (entity is Monster m)
 			{
-				_monsters.TryRemove(m.Id, out _);
+				_monsters.TryRemove(m.ObjectId, out _);
+				UnregisterEntity(m);
 				// Death packet handled in Monster.Die
 			}
 			else if (entity is Player p)
 			{
-				_players.TryRemove(p.Id, out _);
-				p.Instance = null;
+				_players.TryRemove(p.ObjectId, out _);
+				UnregisterEntity(p);
 				// Broadcast vanish
 			}
 		}
@@ -199,7 +289,7 @@ namespace Kakia.TW.World.Managers
 			// In a real scenario, use QuadTree or Grid for range checks
 			foreach (var p in _players.Values)
 			{
-				if (!includeSelf && p.Id == source.Id) continue;
+				if (!includeSelf && p.ObjectId == source.ObjectId) continue;
 
 				// Simple distance check (e.g. 20 tiles)
 				if (IsInRange(source.ObjectPos, p.ObjectPos))
@@ -234,9 +324,9 @@ namespace Kakia.TW.World.Managers
 			return (dx * dx + dy * dy) <= 400;
 		}
 
-		public bool TryGetNpc(uint id, out Npc? npc)
+		public bool TryGetNpc(uint objectId, out Npc? npc)
 		{
-			return _npcs.TryGetValue(id, out npc);
+			return _npcs.TryGetValue(objectId, out npc);
 		}
 
 		/// <summary>
@@ -248,11 +338,29 @@ namespace Kakia.TW.World.Managers
 		}
 
 		/// <summary>
-		/// Gets a player by ID if they are on this map.
+		/// Gets a player by ObjectId if they are on this map.
 		/// </summary>
-		public bool TryGetPlayer(uint id, out Player? player)
+		public bool TryGetPlayer(uint objectId, out Player? player)
 		{
-			return _players.TryGetValue(id, out player);
+			return _players.TryGetValue(objectId, out player);
+		}
+
+		/// <summary>
+		/// Tries to find a player by their character name.
+		/// </summary>
+		public bool TryGetPlayerByName(string name, out Player? player)
+		{
+			player = _players.Values.FirstOrDefault(p =>
+				p.Data.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+			return player != null;
+		}
+
+		/// <summary>
+		/// Gets the number of players currently on this map.
+		/// </summary>
+		public int GetPlayerCount()
+		{
+			return _players.Count;
 		}
 
 		/// <summary>
@@ -279,40 +387,42 @@ namespace Kakia.TW.World.Managers
 		/// </summary>
 		public void AddWarp(Warp warp)
 		{
-			_warps.TryAdd(warp.Id, warp);
+			RegisterEntity(warp);
+			_warps.TryAdd(warp.ObjectId, warp);
 		}
 
 		/// <summary>
 		/// Adds an NPC to the map and broadcasts spawn to all players.
 		/// </summary>
-		public void AddNpc(Npc npc)
+		public void AddNpc(Npc npc, bool silently = false)
 		{
-			if (_npcs.TryAdd(npc.Id, npc))
-			{
-				npc.Instance = this;
+			RegisterEntity(npc);
 
-				// Broadcast NPC spawn to all players on the map
+			if (_npcs.TryAdd(npc.ObjectId, npc))
+			{
+				// Broadcast NPC spawn to all players on the map using ObjectId
 				foreach (var player in _players.Values)
 				{
-					Send.SpawnNpc(player.Connection, npc.Id, npc.ModelId, npc.ObjectPos.Position, npc.Direction);
+					if (!silently)
+						Send.SpawnNpc(player.Connection, npc.ObjectId, npc.ModelId, npc.ObjectPos.Position, npc.Direction);
 				}
 			}
 		}
 
 		/// <summary>
-		/// Removes an NPC from the map and broadcasts despawn to all players.
+		/// Removes an NPC from the map by ObjectId and broadcasts despawn to all players.
 		/// </summary>
-		public void RemoveNpc(uint npcId)
+		public void RemoveNpc(uint objectId)
 		{
-			if (_npcs.TryRemove(npcId, out var npc))
+			if (_npcs.TryRemove(objectId, out var npc))
 			{
-				npc.Instance = null;
-
-				// Broadcast NPC removal to all players
+				// Broadcast NPC removal to all players using ObjectId
 				foreach (var player in _players.Values)
 				{
-					Send.EntityRemove(player.Connection, npcId);
+					Send.EntityRemove(player.Connection, npc.ObjectId);
 				}
+
+				UnregisterEntity(npc);
 			}
 		}
 
@@ -321,41 +431,41 @@ namespace Kakia.TW.World.Managers
 		/// </summary>
 		public void AddMonster(Monster monster)
 		{
-			if (_monsters.TryAdd(monster.Id, monster))
-			{
-				monster.Instance = this;
+			RegisterEntity(monster);
 
-				// Broadcast monster spawn to all players on the map
+			if (_monsters.TryAdd(monster.ObjectId, monster))
+			{
+				// Broadcast monster spawn to all players on the map using ObjectId
 				foreach (var player in _players.Values)
 				{
-					Send.SpawnNpc(player.Connection, monster.Id, monster.ModelId, monster.ObjectPos.Position, monster.Direction);
+					Send.SpawnNpc(player.Connection, monster.ObjectId, monster.ModelId, monster.ObjectPos.Position, monster.Direction);
 				}
 			}
 		}
 
 		/// <summary>
-		/// Removes a monster from the map and broadcasts despawn to all players.
+		/// Removes a monster from the map by ObjectId and broadcasts despawn to all players.
 		/// </summary>
-		public void RemoveMonster(uint monsterId)
+		public void RemoveMonster(uint objectId)
 		{
-			if (_monsters.TryRemove(monsterId, out var monster))
+			if (_monsters.TryRemove(objectId, out var monster))
 			{
-				monster.Instance = null;
-
-				// Broadcast monster removal to all players
+				// Broadcast monster removal to all players using ObjectId
 				foreach (var player in _players.Values)
 				{
-					Send.EntityRemove(player.Connection, monsterId);
+					Send.EntityRemove(player.Connection, monster.ObjectId);
 				}
+
+				UnregisterEntity(monster);
 			}
 		}
 
 		/// <summary>
-		/// Gets a monster by ID if it exists on this map.
+		/// Gets a monster by ObjectId if it exists on this map.
 		/// </summary>
-		public bool TryGetMonster(uint id, out Monster? monster)
+		public bool TryGetMonster(uint objectId, out Monster? monster)
 		{
-			return _monsters.TryGetValue(id, out monster);
+			return _monsters.TryGetValue(objectId, out monster);
 		}
 	}
 }

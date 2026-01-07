@@ -57,8 +57,8 @@ namespace Kakia.TW.World.Managers
 		{
 			_isRespawning = false;
 
-			uint id = WorldServer.Instance.World.GetNextEntityId();
-			_currentMob = new Monster(id, _mobName, _mobModelId)
+			// Map will assign ObjectId via RegisterEntity
+			_currentMob = new Monster(_mobName, _mobModelId)
 			{
 				ObjectPos = new ObjectPos
 				{
@@ -68,11 +68,11 @@ namespace Kakia.TW.World.Managers
 				Direction = _direction,
 				MaxHP = _maxHp,
 				CurrentHP = _maxHp,
-				Instance = _map,
 				SourceSpawner = this
 			};
 
 			_map.AddMonster(_currentMob);
+			// ObjectId is now assigned by the map
 		}
 
 		public void OnMonsterDied()
@@ -87,7 +87,7 @@ namespace Kakia.TW.World.Managers
 			_stopped = true;
 			if (_currentMob != null)
 			{
-				_map.RemoveMonster(_currentMob.Id);
+				_map.RemoveMonster(_currentMob.ObjectId);
 				_currentMob = null;
 			}
 		}

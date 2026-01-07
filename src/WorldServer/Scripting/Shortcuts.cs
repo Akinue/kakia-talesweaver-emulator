@@ -31,8 +31,8 @@ namespace Kakia.TW.World.Scripting
 			var map = WorldServer.Instance.World.Maps.GetMap(1, 1);
 			if (map != null)
 			{
-				uint id = WorldServer.Instance.World.GetNextEntityId();
-				var warp = new Warp(id)
+				// Map will assign ObjectId via RegisterEntity
+				var warp = new Warp()
 				{
 					ObjectPos = new ObjectPos { Position = new WorldPosition(destMapId, x, y) },
 					DestMapId = destMapId,
@@ -40,7 +40,7 @@ namespace Kakia.TW.World.Scripting
 					DestX = destX,
 					DestY = destY
 				};
-				map.Enter(warp);
+				map.AddWarp(warp);
 			}
 		}
 	}

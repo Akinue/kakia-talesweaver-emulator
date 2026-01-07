@@ -85,9 +85,7 @@ namespace Kakia.TW.World.Scripting
 				return null;
 			}
 
-			uint mobId = GenerateMobId();
-
-			var monster = new Monster(mobId, name, modelId)
+			var monster = new Monster(name, modelId)
 			{
 				Direction = direction,
 				MaxHP = maxHp,
@@ -101,15 +99,9 @@ namespace Kakia.TW.World.Scripting
 
 			map.AddMonster(monster);
 
-			Log.Debug($"Spawned monster '{name}' (ID: {mobId}, Model: {modelId}) at {mapId}-{zoneId} ({x},{y})");
+			Log.Debug($"Spawned monster '{name}' (ObjectId: {monster.ObjectId}, Model: {modelId}) at {mapId}-{zoneId} ({x},{y})");
 
 			return monster;
-		}
-
-		private static uint _mobIdCounter = 0x20000000; // Different range than NPCs
-		private static uint GenerateMobId()
-		{
-			return Interlocked.Increment(ref _mobIdCounter);
 		}
 	}
 }

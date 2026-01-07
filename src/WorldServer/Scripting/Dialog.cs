@@ -34,8 +34,8 @@ namespace Kakia.TW.World.Scripting
 		/// </summary>
 		public async Task Message(string text)
 		{
-			// Send dialog with portrait using NPC's model ID
-			Send.NpcDialog(_conn, _npc.Id, _npc.ModelId, text);
+			// Send dialog with portrait using NPC's ObjectId and model ID
+			Send.NpcDialog(_conn, _npc.ObjectId, _npc.ModelId, text);
 
 			// Wait for Op.CS_NPC_DIALOG_ANSWER (0x6C)
 			await WaitForInput();
@@ -83,7 +83,7 @@ namespace Kakia.TW.World.Scripting
 		/// </summary>
 		public void Close()
 		{
-			Send.NpcDialogClose(_conn, _npc.Id);
+			Send.NpcDialogClose(_conn, _npc.ObjectId);
 			_conn.CurrentDialog = null;
 		}
 

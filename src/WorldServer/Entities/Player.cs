@@ -13,7 +13,6 @@ public class Player : Entity
 	{
 		Connection = conn;
 		Data = data;
-		Id = data.UserId;
 		ObjectPos = data.ObjectPos;
 	}
 

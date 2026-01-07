@@ -12,15 +12,13 @@ namespace Kakia.TW.World.Entities
 	public class Npc : Entity
 	{
 		public string Name { get; set; }
-		public uint ModelId { get; set; }
 		public byte Direction { get; set; }
 
 		// The script to run when clicked
 		public DialogFunc? Script { get; set; }
 
-		public Npc(uint id, string name, uint modelId)
+		public Npc(string name, uint modelId)
 		{
-			Id = id;
 			Name = name;
 			ModelId = modelId;
 		}

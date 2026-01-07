@@ -192,13 +192,37 @@ namespace Kakia.TW.World.Network
 			packet.PutByte((byte)SpawnType.MonsterNpc); // Type: NPC/Monster
 
 			packet.PutUInt(objectId);
-			packet.PutUInt(npcId);
 			packet.PutUInt(0); // Unk v3
 
 			packet.PutUInt(0); // Unk v30
+			packet.PutUInt(npcId);
 			packet.PutUShort(pos.X);
 			packet.PutUShort(pos.Y);
 			packet.PutByte(direction);
+
+			conn.Send(packet);
+		}
+
+		public static void SpawnHardcoded(WorldConnection conn, Entity entity)
+		{
+			var packet = new Packet(Op.WorldResponse);
+			packet.PutByte((byte)WorldPacketId.Spawn);
+			packet.PutByte((byte)SpawnType.Npc); // Type: NPC/Monster
+
+			packet.PutUInt(entity.ObjectId);
+			packet.PutEmptyBin(4);
+			// 21 9E 63 01 
+			packet.PutUInt(entity.ModelId);
+			packet.PutUShort(entity.ObjectPos.Position.X);
+			packet.PutUShort(entity.ObjectPos.Position.Y);
+			packet.PutByte(entity.ObjectPos.Direction);
+			packet.PutByte(0);
+			packet.PutByte(10); // 0x0A
+			packet.PutLong(-1);
+			packet.PutEmptyBin(39);
+			packet.PutByte(0);
+			packet.PutByte(0);
+			packet.PutByte(0);
 
 			conn.Send(packet);
 		}
@@ -669,7 +693,7 @@ namespace Kakia.TW.World.Network
 		{
 			foreach (var player in map.GetPlayers())
 			{
-				if (exclude != null && player.Id == exclude.Id) continue;
+				if (exclude != null && player.ObjectId == exclude.ObjectId) continue;
 				player.Connection.Send(packet);
 			}
 		}

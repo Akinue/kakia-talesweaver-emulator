@@ -1,5 +1,6 @@
 ﻿using Kakia.TW.Shared.Network;
 using Kakia.TW.Shared.World;
+using Kakia.TW.World.Entities;
 using Kakia.TW.World.Scripting;
 using System;
 using System.Threading.Tasks;
@@ -149,89 +150,17 @@ namespace Kakia.TW.World.Network
 
 			if (conn.Player == null) return;
 
-			Log.Info($"Chat [{conn.Username}]: {message}");
-
-			// Handle chat commands
-			if (message.StartsWith("@"))
-			{
-				HandleChatCommand(conn, message);
+			// Try to execute message as a chat command, don't send if it
+			// was handled as one
+			if (WorldServer.Instance.ChatCommands.TryExecute(conn.Player, message))
 				return;
-			}
+
+			Log.Info($"Chat [{conn.Username}]: {message}");
 
 			// Broadcast chat to map
 			if (conn.Player.Instance != null)
 			{
-				Send.ChatBroadcast(conn.Player.Instance, conn.Player.Id, message);
-			}
-		}
-
-		private void HandleChatCommand(WorldConnection conn, string message)
-		{
-			var parts = message.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-			var command = parts[0].ToLowerInvariant();
-
-			switch (command)
-			{
-				case "@warp":
-					if (parts.Length >= 2)
-					{
-						// Format: @warp mapId-zoneId or @warp mapId zoneId
-						var mapParts = parts[1].Split('-');
-						if (mapParts.Length >= 2 &&
-							ushort.TryParse(mapParts[0], out ushort mapId) &&
-							ushort.TryParse(mapParts[1], out ushort zoneId))
-						{
-							// Default position or specified
-							ushort x = 100, y = 100;
-							if (parts.Length >= 4)
-							{
-								ushort.TryParse(parts[2], out x);
-								ushort.TryParse(parts[3], out y);
-							}
-
-							conn.Player?.Warp(mapId, zoneId, x, y);
-							Log.Info($"Player {conn.Username} warped to {mapId}-{zoneId} ({x},{y})");
-						}
-					}
-					break;
-
-				case "@listmaps":
-					var mapList = string.Join(", ", WorldServer.Instance.World.Maps.GetLoadedMapIds());
-					Send.Chat(conn, 0, $"Maps: {mapList}");
-					break;
-
-				case "@levelup":
-					if (conn.Player != null)
-					{
-						Send.CharEffect(conn, conn.Player.Id, 0x01); // LevelUp effect
-					}
-					break;
-
-				case "@maxlevel":
-					if (conn.Player != null)
-					{
-						Send.CharEffect(conn, conn.Player.Id, 0x02); // MaxLevel effect
-					}
-					break;
-
-				case "@refresh":
-					if (conn.Player != null)
-					{
-						Send.SpawnUser(conn, conn.Player.Data, isSelf: true);
-					}
-					break;
-
-				case "@pos":
-					if (conn.Player != null)
-					{
-						var pos = conn.Player.ObjectPos;
-						Send.Chat(conn, 0, $"Position: ({pos.Position.X}, {pos.Position.Y}) Dir: {pos.Direction}");
-					}
-					break;
-
-				default:
-					Send.Chat(conn, 0, $"Unknown command: {command}");
-					break;
+				Send.ChatBroadcast(conn.Player.Instance, conn.Player.ObjectId, message);
 			}
 		}
 
@@ -268,7 +197,7 @@ namespace Kakia.TW.World.Network
 					// Broadcast movement to other players
 					if (conn.Player.Instance != null)
 					{
-						Send.MoveObject(conn.Player.Instance, conn.Player.Id, moveType, previousX, previousY, x, y, dir);
+						Send.MoveObject(conn.Player.Instance, conn.Player.ObjectId, moveType, previousX, previousY, x, y, dir);
 					}
 				}
 			}
@@ -301,7 +230,7 @@ namespace Kakia.TW.World.Network
 
 			if (portal != null)
 			{
-				Log.Info($"Player {conn.Username} touched portal {portal.Id} -> Map {portal.DestMapId}-{portal.DestZoneId}");
+				Log.Info($"Player {conn.Username} touched portal {portal.ObjectId} -> Map {portal.DestMapId}-{portal.DestZoneId}");
 				conn.Player.Warp(portal.DestMapId, portal.DestZoneId, portal.DestX, portal.DestY);
 			}
 		}
@@ -310,45 +239,57 @@ namespace Kakia.TW.World.Network
 		[PacketHandler(Op.EntityClickRequest)]
 		public void ClickedEntityRequest(WorldConnection conn, Packet packet)
 		{
-			uint entityId = packet.GetUInt();
+			uint objectId = packet.GetUInt();
 
 			if (conn.Player?.Instance == null) return;
 
 			// Send click acknowledgment
-			Send.EntityClickAck(conn, entityId);
+			Send.EntityClickAck(conn, objectId);
 
-			// Check if it's an NPC with a dialog script
-			if (conn.Player.Instance.TryGetNpc(entityId, out var npc) && npc?.Script != null)
+			// Unified entity lookup by ObjectId
+			if (!conn.Player.Instance.TryGetEntity(objectId, out var entity))
 			{
-				Log.Debug($"Player {conn.Username} clicked NPC '{npc.Name}' (ID: {entityId})");
-
-				// Start Dialog
-				var dialog = new Dialog(conn, npc);
-				conn.CurrentDialog = dialog;
-
-				// Run script async (fire and forget from handler perspective)
-				_ = Task.Run(async () =>
-				{
-					try
-					{
-						await npc.Script(dialog);
-					}
-					catch (Exception ex)
-					{
-						Log.Error($"NPC Script error: {ex.Message}");
-						dialog.Close();
-					}
-				});
+				Log.Debug($"Player {conn.Username} clicked unknown entity (ObjectId: {objectId})");
+				return;
 			}
-			// Check if it's a monster (for targeting/combat)
-			else if (conn.Player.Instance.TryGetMonster(entityId, out var monster))
+
+			switch (entity)
 			{
-				Log.Debug($"Player {conn.Username} clicked Monster '{monster.Name}' (ID: {entityId})");
-				// TODO: Handle monster targeting/combat
-			}
-			else
-			{
-				Log.Debug($"Player {conn.Username} clicked unknown entity (ID: {entityId})");
+				case Npc npc when npc.Script != null:
+					Log.Debug($"Player {conn.Username} clicked NPC '{npc.Name}' (ObjectId: {objectId})");
+
+					// Start Dialog
+					var dialog = new Dialog(conn, npc);
+					conn.CurrentDialog = dialog;
+
+					// Run script async (fire and forget from handler perspective)
+					_ = Task.Run(async () =>
+					{
+						try
+						{
+							await npc.Script(dialog);
+						}
+						catch (Exception ex)
+						{
+							Log.Error($"NPC Script error: {ex.Message}");
+							dialog.Close();
+						}
+					});
+					break;
+
+				case Monster monster:
+					Log.Debug($"Player {conn.Username} clicked Monster '{monster.Name}' (ObjectId: {objectId})");
+					// TODO: Handle monster targeting/combat
+					break;
+
+				case Player otherPlayer:
+					Log.Debug($"Player {conn.Username} clicked Player '{otherPlayer.Data.Name}' (ObjectId: {objectId})");
+					// TODO: Handle player interaction
+					break;
+
+				default:
+					Log.Debug($"Player {conn.Username} clicked entity type {entity.GetType().Name} (ObjectId: {objectId})");
+					break;
 			}
 		}
 
@@ -459,7 +400,7 @@ namespace Kakia.TW.World.Network
 			// Broadcast to other players on the map
 			if (conn.Player.Instance != null)
 			{
-				Send.DirectionUpdate(conn.Player.Instance, conn.Player.Id, direction, conn.Player);
+				Send.DirectionUpdate(conn.Player.Instance, conn.Player.ObjectId, direction, conn.Player);
 			}
 		}
 
@@ -472,7 +413,7 @@ namespace Kakia.TW.World.Network
 			// Legacy: 4A 00 00 00 00 00 00, 17 00, then attack result
 
 			Send.AttackAck(conn);
-			Send.AttackResult(conn, conn.Player.Id);
+			Send.AttackResult(conn, conn.Player.ObjectId);
 		}
 
 		[PacketHandler(Op.SetPoseRequest)] // 0x32
@@ -487,7 +428,7 @@ namespace Kakia.TW.World.Network
 			// Broadcast pose change to all players including self
 			if (conn.Player.Instance != null)
 			{
-				Send.PoseUpdate(conn.Player.Instance, conn.Player.Id, pose);
+				Send.PoseUpdate(conn.Player.Instance, conn.Player.ObjectId, pose);
 			}
 		}
 
@@ -505,7 +446,7 @@ namespace Kakia.TW.World.Network
 			// Broadcast despawn to other players
 			if (conn.Player.Instance != null)
 			{
-				Send.EntityDespawn(conn.Player.Instance, conn.Player.Id, conn.Player);
+				Send.EntityDespawn(conn.Player.Instance, conn.Player.ObjectId, conn.Player);
 			}
 		}
 

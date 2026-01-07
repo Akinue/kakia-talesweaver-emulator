@@ -4,6 +4,8 @@ using Kakia.TW.World.Managers;
 using Yggdrasil.Logging;
 using Yggdrasil.Scripting;
 
+// Note: Removed static _npcIdCounter - Map now assigns ObjectIds
+
 namespace Kakia.TW.World.Scripting
 {
 	/// <summary>
@@ -30,7 +32,7 @@ namespace Kakia.TW.World.Scripting
 			// Remove all NPCs spawned by this script
 			foreach (var npc in _spawnedNpcs)
 			{
-				npc.Instance?.RemoveNpc(npc.Id);
+				npc.Instance?.RemoveNpc(npc.ObjectId);
 			}
 			_spawnedNpcs.Clear();
 		}
@@ -61,10 +63,8 @@ namespace Kakia.TW.World.Scripting
 				return null;
 			}
 
-			// Generate unique NPC ID (high range to avoid player ID conflicts)
-			uint npcId = GenerateNpcId();
-
-			var npc = new Npc(npcId, name, modelId)
+			// Map will assign ObjectId via RegisterEntity
+			var npc = new Npc(name, modelId)
 			{
 				Direction = direction,
 				Script = dialogFunc,
@@ -78,7 +78,7 @@ namespace Kakia.TW.World.Scripting
 			map.AddNpc(npc);
 			_spawnedNpcs.Add(npc);
 
-			Log.Debug($"Spawned NPC '{name}' (ID: {npcId}, Model: {modelId}) at {mapId}-{zoneId} ({x},{y})");
+			Log.Debug($"Spawned NPC '{name}' (ObjectId: {npc.ObjectId}, Model: {modelId}) at {mapId}-{zoneId} ({x},{y})");
 
 			return npc;
 		}
@@ -95,9 +95,8 @@ namespace Kakia.TW.World.Scripting
 				return null;
 			}
 
-			uint warpId = GenerateNpcId();
-
-			var warp = new Warp(warpId)
+			// Map will assign ObjectId via RegisterEntity
+			var warp = new Warp()
 			{
 				DestMapId = destMapId,
 				DestZoneId = destZoneId,
@@ -111,15 +110,9 @@ namespace Kakia.TW.World.Scripting
 
 			map.AddWarp(warp);
 
-			Log.Debug($"Spawned Warp (ID: {warpId}) at {mapId}-{zoneId} ({x},{y}) -> {destMapId}-{destZoneId} ({destX},{destY})");
+			Log.Debug($"Spawned Warp (ObjectId: {warp.ObjectId}) at {mapId}-{zoneId} ({x},{y}) -> {destMapId}-{destZoneId} ({destX},{destY})");
 
 			return warp;
-		}
-
-		private static uint _npcIdCounter = 0x10000000; // Start at high range
-		private static uint GenerateNpcId()
-		{
-			return Interlocked.Increment(ref _npcIdCounter);
 		}
 	}
 }

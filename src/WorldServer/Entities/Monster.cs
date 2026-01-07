@@ -19,9 +19,8 @@ namespace Kakia.TW.World.Entities
 
 		public bool IsDead => CurrentHP <= 0;
 
-		public Monster(uint id, string name, uint modelId)
+		public Monster(string name, uint modelId)
 		{
-			Id = id;
 			Name = name;
 			ModelId = modelId;
 			MaxHP = 100; // Default, should load from DB/Data
@@ -59,8 +58,8 @@ namespace Kakia.TW.World.Entities
 			{
 				var p = new Packet(Op.WorldResponse); // 0x07
 				p.PutByte((byte)WorldPacketId.Died); // 0x02
-				p.PutUInt(Id);
-				p.PutUInt(killer?.Id ?? 0); // Attacker ID
+				p.PutUInt(ObjectId);
+				p.PutUInt(killer?.ObjectId ?? 0); // Attacker ObjectId
 				return p;
 			}, includeSelf: true);
 
@@ -80,9 +79,8 @@ namespace Kakia.TW.World.Entities
 		public ushort DestX { get; set; }
 		public ushort DestY { get; set; }
 
-		public Warp(uint id)
+		public Warp()
 		{
-			Id = id;
 		}
 
 		public override void Update(TimeSpan elapsed)

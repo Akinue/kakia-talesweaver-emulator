@@ -7,7 +7,14 @@ namespace Kakia.TW.World.Entities
 {
 	public abstract class Entity
 	{
-		public uint Id { get; set; }
+		/// <summary>
+		/// Runtime object ID assigned by the map. Used in network packets.
+		/// Unique within a map, can be reused across different maps.
+		/// </summary>
+		public uint ObjectId { get; internal set; }
+
+		public uint ModelId { get; set; }
+
 		public ObjectPos ObjectPos { get; set; } = new();
 		public Map Instance { get; set; }
 
