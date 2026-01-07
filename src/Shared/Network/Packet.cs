@@ -222,6 +222,16 @@ namespace Kakia.TW.Shared.Network
 		}
 
 		/// <summary>
+		/// Write ulong in little endian.
+		/// </summary>
+		public void PutULongLittleEndian(ulong value)
+		{
+			var bytes = new byte[8];
+			BinaryPrimitives.WriteUInt64LittleEndian(bytes, value);
+			_buffer.Write(bytes);
+		}
+
+		/// <summary>
 		/// Writes a ZLib compressed string used by TW.
 		/// Format: [0x01] [Len:UShort] [CompressedBytes]
 		/// UPDATED: Uses Shift-JIS by default to match Legacy PacketWriter.

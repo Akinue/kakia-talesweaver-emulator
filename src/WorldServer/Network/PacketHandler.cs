@@ -236,7 +236,7 @@ namespace Kakia.TW.World.Network
 			}
 		}
 
-		// 0x43 - CS_CLICKED_ENTITY
+		// 0x43 - EntityClickRequest
 		[PacketHandler(Op.EntityClickRequest)]
 		public void ClickedEntityRequest(WorldConnection conn, Packet packet)
 		{
@@ -258,6 +258,13 @@ namespace Kakia.TW.World.Network
 			{
 				case Npc npc when npc.Script != null:
 					Log.Debug($"Player {conn.Username} clicked NPC '{npc.Name}' (ObjectId: {objectId})");
+
+					// Send pre-dialog packet sequence (from legacy ClickedEntityHandler)
+					Send.EntityFocus(conn, objectId);
+					Send.InteractionConfirm(conn);
+					Send.InteractionTimer(conn);
+					Send.EntityClickAck(conn, objectId); // Sent again per legacy
+					Send.EntityInteraction(conn, objectId);
 
 					// Start Dialog
 					var dialog = new Dialog(conn, npc);

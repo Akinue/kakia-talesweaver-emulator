@@ -9,6 +9,7 @@ namespace Kakia.TW.World.Scripting
 		private readonly WorldConnection _conn;
 		private readonly Npc _npc;
 		private ulong _dialogId = 1;
+		private bool _visualNovelInitialized = false;
 
 		// TaskCompletionSource handles the "Wait for Packet" logic
 		private TaskCompletionSource<string>? _inputTcs;
@@ -30,21 +31,27 @@ namespace Kakia.TW.World.Scripting
 		}
 
 		/// <summary>
-		/// Sends a message with NPC portrait and waits for the user to press "Next".
+		/// Sends a message with NPC portrait (visual novel style).
+		/// Uses 0x05 dialog - portrait in bottom left, hides UI.
+		/// Client handles pacing - no server-side wait needed.
 		/// </summary>
-		public async Task Message(string text)
+		public void Message(string text)
 		{
+			// Initialize visual novel mode if this is the first 0x05 dialog
+			if (!_visualNovelInitialized)
+			{
+				Send.NpcDialogInit(_conn);
+				_visualNovelInitialized = true;
+			}
+
 			// Send dialog with portrait using NPC's ObjectId and model ID
 			Send.NpcDialog(_conn, _npc.ObjectId, _npc.ModelId, text);
-
-			// Wait for Op.CS_NPC_DIALOG_ANSWER (0x6C)
-			await WaitForInput();
 		}
 
 		/// <summary>
-		/// Alias for Message - sends a message and waits for "Next".
+		/// Alias for Message.
 		/// </summary>
-		public Task Msg(string text) => Message(text);
+		public void Msg(string text) => Message(text);
 
 		/// <summary>
 		/// Shows a menu with NPC portrait and returns the selected index (0-based).
@@ -80,10 +87,24 @@ namespace Kakia.TW.World.Scripting
 
 		/// <summary>
 		/// Closes the NPC dialog window.
+		/// For visual novel mode (0x05), sends 44 05 01 to end the sequence.
 		/// </summary>
 		public void Close()
 		{
-			Send.NpcDialogClose(_conn, _npc.ObjectId);
+			// Only send close if visual novel was initialized
+			if (_visualNovelInitialized)
+			{
+				Send.NpcDialogClose(_conn, _npc.ObjectId);
+				_visualNovelInitialized = false; // Reset for potential reuse
+			}
+		}
+
+		/// <summary>
+		/// Ends the dialog session entirely.
+		/// </summary>
+		public void End()
+		{
+			Close();
 			_conn.CurrentDialog = null;
 		}
 

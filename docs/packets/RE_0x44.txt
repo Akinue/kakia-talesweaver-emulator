@@ -1,0 +1,451 @@
+void __stdcall sub_841EC0(unsigned __int8 *a1)
+{
+  unsigned __int8 *v1; // ecx
+  unsigned __int8 *v2; // esi
+  unsigned __int16 v3; // ax
+  int v4; // edi
+  int v5; // ebx
+  char *v6; // eax
+  int v7; // ecx
+  char *v8; // eax
+  _DWORD *v9; // esi
+  int v10; // esi
+  int v11; // ebx
+  int v12; // eax
+  int v13; // edi
+  int v14; // eax
+  char *v15; // esi
+  int v16; // ebx
+  int v17; // eax
+  int v18; // edi
+  char *v19; // esi
+  int v20; // ebx
+  _DWORD *v21; // eax
+  _DWORD *v22; // edi
+  int v23; // esi
+  char v24; // al
+  unsigned __int8 *v25; // ecx
+  int v26; // edi
+  unsigned __int16 v27; // ax
+  char *v28; // esi
+  int *v29; // ecx
+  int v30; // eax
+  unsigned __int16 v31; // ax
+  int *v32; // ecx
+  int v33; // eax
+  unsigned __int16 v34; // ax
+  char v35; // al
+  int *v36; // ecx
+  int v37; // eax
+  int v38; // ebx
+  int v39; // edi
+  unsigned __int16 v40; // ax
+  char *v41; // esi
+  int v42; // esi
+  int v43; // eax
+  int *v44; // ecx
+  int v45; // eax
+  int v46; // esi
+  __int16 v47; // di
+  __int16 v48; // dx
+  int *v49; // ecx
+  int v50; // eax
+  int v51; // esi
+  int v52; // edi
+  char v53; // bl
+  int *v54; // ecx
+  int v55; // eax
+  int *v56; // edi
+  int *v57; // esi
+  int *v58; // eax
+  int v59; // eax
+  unsigned __int16 v60; // [esp-1Ch] [ebp-101A8h]
+  __int16 v61; // [esp-18h] [ebp-101A4h]
+  int v62; // [esp-14h] [ebp-101A0h]
+  int v63; // [esp-10h] [ebp-1019Ch]
+  int v64; // [esp-Ch] [ebp-10198h]
+  int v65; // [esp-4h] [ebp-10190h]
+  int v66; // [esp-4h] [ebp-10190h]
+  __int16 v67; // [esp-4h] [ebp-10190h]
+  __int128 v68; // [esp+10h] [ebp-1017Ch] BYREF
+  int v69; // [esp+20h] [ebp-1016Ch]
+  int v70; // [esp+24h] [ebp-10168h]
+  int v71; // [esp+28h] [ebp-10164h]
+  int v72; // [esp+2Ch] [ebp-10160h]
+  int v73; // [esp+30h] [ebp-1015Ch]
+  int v74; // [esp+34h] [ebp-10158h]
+  int v75; // [esp+38h] [ebp-10154h]
+  int v76; // [esp+40h] [ebp-1014Ch]
+  int v77; // [esp+44h] [ebp-10148h]
+  int v78; // [esp+48h] [ebp-10144h]
+  int v79; // [esp+4Ch] [ebp-10140h]
+  int v80; // [esp+50h] [ebp-1013Ch]
+  int v81; // [esp+54h] [ebp-10138h]
+  int v82; // [esp+58h] [ebp-10134h]
+  int v83; // [esp+5Ch] [ebp-10130h]
+  int v84; // [esp+60h] [ebp-1012Ch]
+  int v85; // [esp+64h] [ebp-10128h]
+  char v86; // [esp+6Bh] [ebp-10121h]
+  _DWORD *v87; // [esp+6Ch] [ebp-10120h]
+  unsigned __int8 *v88; // [esp+70h] [ebp-1011Ch] BYREF
+  char *v89; // [esp+74h] [ebp-10118h]
+  unsigned __int8 *v90; // [esp+78h] [ebp-10114h] BYREF
+  char v91[65280]; // [esp+7Ch] [ebp-10110h] BYREF
+  char v92[256]; // [esp+FF7Ch] [ebp-210h] BYREF
+  char v93[256]; // [esp+1007Ch] [ebp-110h] BYREF
+  int v94; // [esp+10188h] [ebp-4h]
+
+  v90 = a1;
+  if ( dword_BCDB98 && CNetwork::GetConnectionState(dword_BCDB98, 0, 0) )
+  {
+    LOBYTE(v88) = std::_Narrow_char_traits<char,int>::to_char_type(v90);
+    v1 = ++v90;
+    switch ( (char)v88 )
+    {
+      case 0:
+        LOBYTE(v89) = Decoder::ReadByte_Ptr(&v90);
+        v92[0] = 0;
+        v93[0] = 0;
+        Decoder::ReadString_Ptr(v92, (int *)&v90);
+        Decoder::ReadString_Ptr(v93, (int *)&v90);
+        v80 = Decoder::ReadInt32_BE_Ptr(&v90);
+        v79 = Decoder::ReadInt32_BE_Ptr(&v90);
+        v78 = Decoder::ReadInt32_BE_Ptr(&v90);
+        v87 = (_DWORD *)Decoder::ReadInt32_BE_Ptr(&v90);
+        v85 = Decoder::ReadInt32_BE_Ptr(&v90);
+        v10 = 0;
+        v84 = 0;
+        v11 = 0;
+        v81 = 0;
+        v83 = 0;
+        v82 = 0;
+        Decoder::ReadByte_Ptr(&v90);
+        v12 = (unsigned __int16)Decoder::ReadShort_BE_Ptr(&v90);
+        v76 = v12;
+        v13 = (unsigned __int16)v12;
+        if ( (_WORD)v12 )
+        {
+          v84 = unknown_libname_10((unsigned __int16)v12);
+          v14 = unknown_libname_10(v13);
+          v81 = v14;
+        }
+        else
+        {
+          v14 = 0;
+        }
+        if ( v13 )
+        {
+          v15 = (char *)v14;
+          v16 = v84 - v14;
+          do
+          {
+            v15[v16] = Decoder::ReadByte_Ptr(&v90);
+            *v15++ = Decoder::ReadByte_Ptr(&v90);
+            --v13;
+          }
+          while ( v13 );
+          v11 = 0;
+          v10 = 0;
+        }
+        v17 = (unsigned __int16)Decoder::ReadShort_BE_Ptr(&v90);
+        v77 = v17;
+        v18 = (unsigned __int16)v17;
+        if ( (_WORD)v17 )
+        {
+          v10 = unknown_libname_10((unsigned __int16)v17);
+          v83 = v10;
+          v82 = unknown_libname_10(v18);
+          v11 = v82;
+        }
+        if ( v18 )
+        {
+          v19 = (char *)v11;
+          v20 = v83 - v82;
+          do
+          {
+            v19[v20] = Decoder::ReadByte_Ptr(&v90);
+            *v19++ = Decoder::ReadByte_Ptr(&v90);
+            --v18;
+          }
+          while ( v18 );
+          v11 = v82;
+          v10 = v83;
+        }
+        v21 = operator new(0x1C4u);
+        v82 = (int)v21;
+        if ( v21 )
+          v22 = sub_835410(v21);
+        else
+          v22 = 0;
+        v65 = v78;
+        v64 = v10;
+        v23 = v81;
+        v63 = v81;
+        v62 = v84;
+        v22[110] = v80;
+        v61 = v77;
+        v60 = v76;
+        v22[111] = v79;
+        sub_85B9B0((int)v22, (char)v88, (char)v89, v92, v93, (int)v87, v85, v60, v61, v62, v63, v64, v11, v65);
+        (*(void (__thiscall **)(int, _DWORD, _DWORD, int, _DWORD, _DWORD *, _DWORD))(*(_DWORD *)dword_BB9644 + 32))(
+          dword_BB9644,
+          0,
+          *(_DWORD *)(dword_BBCEA0 + 8),
+          2,
+          v22[1],
+          v22,
+          0);
+        if ( v84 )
+          sub_A38FC7(v84);
+        if ( v23 )
+          sub_A38FC7(v23);
+        if ( v83 )
+          sub_A38FC7(v83);
+        if ( v11 )
+          sub_A38FC7(v11);
+        break;
+      case 1:
+        v8 = (char *)operator new(0x1C4u);
+        v89 = v8;
+        if ( v8 )
+          v9 = sub_835410(v8);
+        else
+          v9 = 0;
+        sub_85B9B0((int)v9, (char)v88, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        (*(void (__thiscall **)(int, _DWORD, _DWORD, int, _DWORD, _DWORD *, _DWORD))(*(_DWORD *)dword_BB9644 + 32))(
+          dword_BB9644,
+          0,
+          *(_DWORD *)(dword_BBCEA0 + 8),
+          2,
+          v9[1],
+          v9,
+          0);
+        break;
+      case 2:
+        v2 = (unsigned __int8 *)Decoder::PeekInt32_BE(v1);
+        v88 = v2;
+        v90 += 4;
+        v81 = Decoder::PeekInt32_BE(v90);
+        v90 += 4;
+        v3 = Decoder::PeekShort_BE(v90);
+        v90 += 2;
+        v4 = v3;
+        v5 = 0;
+        if ( v3 )
+        {
+          v5 = unknown_libname_10(v3);
+          sub_A3A766(v5, (int)v90, v4);
+          v90 += v4;
+          v2 = v88;
+        }
+        v6 = (char *)operator new(0x18u);
+        v89 = v6;
+        if ( v6 )
+        {
+          *(_DWORD *)v6 = &MSG_S_EVENT_SCRIPT_BROADCAST::`vftable';
+          *((_DWORD *)v6 + 1) = 99;
+          *((_DWORD *)v6 + 5) = 0;
+        }
+        else
+        {
+          v6 = 0;
+        }
+        v7 = v81;
+        *((_DWORD *)v6 + 5) = 0;
+        *((_DWORD *)v6 + 2) = v2;
+        *((_DWORD *)v6 + 3) = v7;
+        *((_WORD *)v6 + 8) = v4;
+        if ( (_WORD)v4 )
+          *((_DWORD *)v6 + 5) = v5;
+        (*(void (__thiscall **)(int, _DWORD, _DWORD, _DWORD, _DWORD, char *, _DWORD))(*(_DWORD *)dword_BB9644 + 32))(
+          dword_BB9644,
+          0,
+          *(_DWORD *)(dword_BBCEA0 + 8),
+          0,
+          *((_DWORD *)v6 + 1),
+          v6,
+          0);
+        break;
+      case 4:
+        sub_841200(v1);
+        break;
+      case 5:
+        v24 = std::_Narrow_char_traits<char,int>::to_char_type(v1);
+        v25 = ++v90;
+        switch ( v24 )
+        {
+          case 0:
+            ++v90;
+            LOBYTE(v87) = std::_Narrow_char_traits<char,int>::to_char_type(v25);
+            LOBYTE(v89) = Decoder::ReadByte_Ptr(&v90);
+            sub_873D70(dword_BBCEA0, (char)v87, (char)v89);
+            return;
+          case 1:
+            sub_865020(dword_BBCEA0);
+            return;
+          case 2:
+            v26 = Decoder::ReadInt32_BE_Ptr(&v90);
+            LOBYTE(v85) = Decoder::ReadByte_Ptr(&v90);
+            LOBYTE(v87) = Decoder::ReadByte_Ptr(&v90);
+            LOBYTE(v89) = Decoder::ReadByte_Ptr(&v90);
+            v27 = Decoder::PeekShort_BE(v90);
+            v28 = (char *)unknown_libname_10(v27 + 1);
+            sub_85E8E0(v28, (int *)&v90);
+            v29 = *(int **)(dword_BBCEA0 + 52);
+            if ( v29 )
+            {
+              v30 = sub_8654B0(v29);
+              sub_862030(v30, v28, v26, v85, (char)v87, (char)v89);
+            }
+            goto LABEL_46;
+          case 3:
+            v31 = Decoder::PeekShort_BE(v25);
+            v28 = (char *)unknown_libname_10(v31 + 1);
+            sub_85E8E0(v28, (int *)&v90);
+            v32 = *(int **)(dword_BBCEA0 + 52);
+            if ( v32 )
+            {
+              v33 = sub_8654B0(v32);
+              sub_861B80(v33, v28);
+            }
+            goto LABEL_46;
+          case 4:
+            v85 = Decoder::PeekInt32_BE(v25);
+            v90 += 4;
+            v87 = (_DWORD *)Decoder::PeekInt32_BE(v90);
+            v90 += 4;
+            v86 = std::_Narrow_char_traits<char,int>::to_char_type(v90++);
+            v34 = Decoder::PeekShort_BE(v90);
+            v28 = (char *)unknown_libname_10(v34 + 1);
+            v89 = v28;
+            sub_85E8E0(v28, (int *)&v90);
+            v35 = std::_Narrow_char_traits<char,int>::to_char_type(v90++);
+            LOBYTE(v88) = v35;
+            v36 = *(int **)(dword_BBCEA0 + 52);
+            if ( v36 )
+            {
+              v37 = sub_8654B0(v36);
+              v38 = v37;
+              if ( v37 )
+              {
+                sub_861C90(v37, v86 != 0, v28, (char)v88);
+                if ( (_BYTE)v88 )
+                {
+                  v39 = (unsigned __int8)v88;
+                  do
+                  {
+                    v40 = Decoder::PeekShort_BE(v90);
+                    v41 = (char *)unknown_libname_10(v40 + 1);
+                    sub_85E8E0(v41, (int *)&v90);
+                    sub_861D90(v38, v41);
+                    if ( v41 )
+                      sub_A38FC7((int)v41);
+                    --v39;
+                  }
+                  while ( v39 );
+                  v28 = v89;
+                }
+                sub_861E60(v38, v85, (int)v87);
+              }
+            }
+LABEL_46:
+            if ( v28 )
+              sub_A38FC7((int)v28);
+            break;
+          case 5:
+            v42 = Decoder::PeekInt32_BE(v25);
+            v90 += 4;
+            v43 = Decoder::PeekInt32_BE(v90);
+            v90 += 4;
+            v44 = *(int **)(dword_BBCEA0 + 52);
+            if ( v44 )
+            {
+              v66 = v43;
+              v45 = sub_8654B0(v44);
+              sub_8622E0(v45, v42, v66);
+            }
+            break;
+          case 6:
+            v46 = Decoder::ReadInt32_BE_Ptr(&v90);
+            v47 = Decoder::ReadShort_BE_Ptr(&v90);
+            v48 = Decoder::ReadShort_BE_Ptr(&v90);
+            v49 = *(int **)(dword_BBCEA0 + 52);
+            if ( v49 )
+            {
+              v67 = v48;
+              v50 = sub_8654B0(v49);
+              sub_861F30(v50, v46, v47, v67);
+            }
+            break;
+          case 7:
+            v51 = Decoder::ReadInt32_BE_Ptr(&v90);
+            v52 = Decoder::ReadInt32_BE_Ptr(&v90);
+            LOBYTE(v87) = Decoder::ReadByte_Ptr(&v90);
+            LOBYTE(v89) = Decoder::ReadByte_Ptr(&v90);
+            v53 = Decoder::ReadByte_Ptr(&v90);
+            sub_85E8E0(v91, (int *)&v90);
+            v54 = *(int **)(dword_BBCEA0 + 52);
+            if ( v54 )
+            {
+              v55 = sub_8654B0(v54);
+              sub_862150(v55, v91, v51, v52, v87, v53 != 0, (char)v89);
+            }
+            break;
+          default:
+            return;
+        }
+        break;
+      case 6:
+        v88 = v1;
+        if ( !Decoder::ReadByte_Ptr(&v88) )
+          sub_84CCE0(v88);
+        break;
+      case 7:
+        if ( !Decoder::ReadByte_Ptr(&v90) )
+        {
+          v56 = (int *)dword_BBCE64;
+          v57 = (int *)sub_713FF0((int *)dword_BBCE64, off_B93394, 0, 1);
+          if ( !v57 )
+          {
+            v58 = (int *)operator new(0x384u);
+            v57 = v58;
+            v89 = (char *)v58;
+            v94 = 0;
+            if ( v58 )
+            {
+              sub_80F4D0((int)v58);
+              *v57 = (int)&CBOSResultWin::`vftable';
+              LOBYTE(v94) = 1;
+              v57[221] = 0;
+              v57[222] = 0;
+              sub_5DD960(v57);
+            }
+            else
+            {
+              v57 = 0;
+            }
+            v59 = *v56;
+            v94 = -1;
+            (*(void (__thiscall **)(int *, int *))(v59 + 20))(v56, v57);
+          }
+          (*(void (__thiscall **)(int *))(*v57 + 16))(v57);
+          v74 = 0;
+          v75 = 0;
+          LODWORD(v68) = Decoder::ReadInt32_BE_Ptr(&v90);
+          DWORD1(v68) = Decoder::ReadInt32_BE_Ptr(&v90);
+          BYTE8(v68) = Decoder::ReadByte_Ptr(&v90) != 0;
+          WORD5(v68) = Decoder::ReadShort_BE_Ptr(&v90);
+          WORD6(v68) = Decoder::ReadShort_BE_Ptr(&v90);
+          v69 = Decoder::ReadInt32_BE_Ptr(&v90);
+          v70 = Decoder::ReadInt32_BE_Ptr(&v90);
+          v71 = Decoder::ReadInt32_BE_Ptr(&v90);
+          v72 = Decoder::ReadInt32_BE_Ptr(&v90);
+          v73 = Decoder::ReadInt32_BE_Ptr(&v90);
+          sub_5DDEC0(v57, &v68);
+        }
+        break;
+      default:
+        return;
+    }
+  }
+}

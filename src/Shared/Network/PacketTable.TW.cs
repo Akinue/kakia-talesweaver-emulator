@@ -39,6 +39,11 @@ namespace Kakia.TW.Shared.Network
 			Register(Op.AttackAck, 0x4A, Dynamic);
 			Register(Op.EntityClickAck, 0x70, Dynamic);
 
+			// Entity Interaction packets (used during NPC dialog)
+			Register(Op.EntityFocusResponse, 0x83, Dynamic);
+			Register(Op.InteractionConfirmResponse, 0x14, Dynamic);
+			Register(Op.InteractionTimerResponse, 0x49, Dynamic);
+
 			// Client -> Server requests
 			Register(Op.StatIncreaseRequest, 0x0A, Dynamic);
 			Register(Op.ChatRequest, 0x0E, Dynamic);

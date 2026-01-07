@@ -318,29 +318,115 @@ namespace Kakia.TW.World.Network
 		}
 
 		/// <summary>
-		/// Sends a dialog message from an NPC with portrait.
-		/// Uses 0x44 0x05 0x02 format.
+		/// Entity focus packet - sent when player clicks an entity.
+		/// Likely controls camera focus or entity highlighting.
+		/// </summary>
+		public static void EntityFocus(WorldConnection conn, uint objectId)
+		{
+			var packet = new Packet(Op.EntityFocusResponse);
+			packet.PutByte(0x02);
+			packet.PutUInt(objectId);
+			// Padding pattern from legacy: 32 bytes with 0x01 markers
+			packet.PutEmptyBin(12);
+			packet.PutByte(0x01);
+			packet.PutEmptyBin(4);
+			packet.PutByte(0x01);
+			packet.PutEmptyBin(4);
+			packet.PutByte(0x01);
+			packet.PutEmptyBin(4);
+			packet.PutByte(0x01);
+			packet.PutEmptyBin(4);
+			conn.Send(packet);
+		}
+
+		/// <summary>
+		/// Unknown confirmation packet sent during entity interaction.
+		/// </summary>
+		public static void InteractionConfirm(WorldConnection conn)
+		{
+			var packet = new Packet(Op.InteractionConfirmResponse);
+			packet.PutByte(0x01);
+			packet.PutEmptyBin(3);
+			conn.Send(packet);
+		}
+
+		/// <summary>
+		/// Timer/cooldown packet - possibly interaction cooldown.
+		/// </summary>
+		public static void InteractionTimer(WorldConnection conn, ushort timerMs = 3000)
+		{
+			var packet = new Packet(Op.InteractionTimerResponse);
+			packet.PutByte(0x0B);
+			packet.PutEmptyBin(4);
+			packet.PutUShort(timerMs);
+			packet.PutEmptyBin(8);
+			conn.Send(packet);
+		}
+
+		/// <summary>
+		/// Entity interaction notification - signals start of interaction.
+		/// Uses 0x0B opcode with subtype 0x01.
+		/// </summary>
+		public static void EntityInteraction(WorldConnection conn, uint objectId)
+		{
+			var packet = new Packet(Op.UserPositionResponse); // 0x0B
+			packet.PutByte(0x01);
+			packet.PutUInt(objectId);
+			conn.Send(packet);
+		}
+
+		/// <summary>
+		/// Dialog action packet (0x44 0x05 0x05) - triggers animation or state change.
+		/// </summary>
+		public static void NpcDialogAction(WorldConnection conn, uint objectId1, uint objectId2)
+		{
+			var packet = new Packet(Op.FriendDialogResponse);
+			packet.PutByte(0x05);
+			packet.PutByte(0x05);
+			packet.PutUInt(objectId1);
+			packet.PutUInt(objectId2);
+			conn.Send(packet);
+		}
+
+		/// <summary>
+		/// Dialog init packet (0x44 0x05 0x00) - initializes dialog state.
+		/// </summary>
+		public static void NpcDialogInit(WorldConnection conn)
+		{
+			var packet = new Packet(Op.FriendDialogResponse);
+			packet.PutByte(0x05);
+			packet.PutByte(0x00);
+			packet.PutByte(0x00);
+			packet.PutByte(0x01);
+			packet.PutByte(0x00);
+			conn.Send(packet);
+		}
+
+		/// <summary>
+		/// Sends a dialog message from an NPC with portrait (0x05 dialog).
+		/// Visual novel style - shows portrait in bottom left, hides main UI.
 		/// </summary>
 		/// <param name="conn">The client connection.</param>
-		/// <param name="npcId">The NPC entity ID (for dialog context).</param>
+		/// <param name="npcId">The NPC entity ID (unused, kept for API compat).</param>
 		/// <param name="modelId">The NPC model ID (for portrait display).</param>
 		/// <param name="text">The message to display.</param>
 		public static void NpcDialog(WorldConnection conn, uint npcId, uint modelId, string text)
 		{
-			// 0x44 0x05 0x02 = Text dialog with portrait
+			// 0x44 0x05 0x02 = Text dialog with portrait (visual novel style)
 			var packet = new Packet(Op.FriendDialogResponse);
-			packet.PutByte(0x05); // Subtype: Text dialog
-			packet.PutByte(0x02); // Has portrait
+			packet.PutByte((byte)DialogActionType.Dialog);       // 0x05
+			packet.PutByte((byte)DialogOptionType.HasOptions);   // 0x02
 
-			// Model ID for portrait (Big Endian byte order in legacy)
+			// Model ID for portrait
 			packet.PutUInt(modelId);
 
-			packet.PutInt(0); // Unknown/padding
+			// Unknown
+			packet.PutUInt(0);
 
-			// Message (length-prefixed, Shift-JIS in legacy but we use ASCII/UTF8)
-			byte[] msgBytes = Encoding.ASCII.GetBytes(text);
-			packet.PutByte((byte)msgBytes.Length);
-			packet.PutBytes(msgBytes);
+			// Message (length-prefixed using PutString)
+			packet.PutString(text, true);
+
+			packet.PutByte(0x01); // Unknown trailing byte
 
 			conn.Send(packet);
 		}
@@ -363,8 +449,8 @@ namespace Kakia.TW.World.Network
 		}
 
 		/// <summary>
-		/// Sends a selection menu from an NPC with portrait.
-		/// Uses 0x44 0x04 0x02 format from legacy.
+		/// Sends a selection menu from an NPC with portrait (0x04 dialog).
+		/// Uses Big Endian for dialogId/modelId to match working test.
 		/// </summary>
 		/// <param name="conn">The client connection.</param>
 		/// <param name="dialogId">Dialog ID for answer tracking.</param>
@@ -373,23 +459,21 @@ namespace Kakia.TW.World.Network
 		/// <param name="options">Menu options for the user to select.</param>
 		public static void NpcMenuWithPortrait(WorldConnection conn, ulong dialogId, uint modelId, string message, string[] options)
 		{
-			// 0x44 0x04 0x02 = Dialog with portrait and menu options
+			// 0x44 0x04 0x02 = Dialog select menu (in-game, with portrait and options)
 			var packet = new Packet(Op.FriendDialogResponse);
-			packet.PutByte(0x04); // Subtype: Menu dialog
-			packet.PutByte(0x02); // Has options
+			packet.PutByte((byte)DialogActionType.DialogSelectMenu); // 0x04
+			packet.PutByte(0x02); // Has options flag
 
-			// Dialog answer ID (8 bytes, for tracking conversation state)
+			// Dialog answer ID (8 bytes, Big Endian - matches working test)
 			packet.PutULong(dialogId);
 
-			// Model ID for portrait
+			// Model ID for portrait (4 bytes, Big Endian - matches working test)
 			packet.PutUInt(modelId);
 
 			packet.PutByte(0x00); // Unknown
 
-			// Message (length-prefixed)
-			byte[] msgBytes = Encoding.ASCII.GetBytes(message);
-			packet.PutByte((byte)msgBytes.Length);
-			packet.PutBytes(msgBytes);
+			// Message (length-prefixed using PutString)
+			packet.PutString(message, false);
 
 			// Options
 			packet.PutByte((byte)options.Length);
@@ -397,10 +481,7 @@ namespace Kakia.TW.World.Network
 
 			foreach (var option in options)
 			{
-				byte[] optBytes = Encoding.ASCII.GetBytes(option);
-				packet.PutByte((byte)optBytes.Length);
-				packet.PutBytes(optBytes);
-				packet.PutByte(0x00); // Null terminator
+				packet.PutString(option);
 			}
 
 			conn.Send(packet);

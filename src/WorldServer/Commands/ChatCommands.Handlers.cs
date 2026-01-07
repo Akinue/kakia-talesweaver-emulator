@@ -1,8 +1,13 @@
 using Kakia.TW.Shared.Data;
+using Kakia.TW.Shared.Network;
 using Kakia.TW.Shared.World;
 using Kakia.TW.World.Entities;
 using Kakia.TW.World.Network;
+using Kakia.TW.World.Scripting;
+using System.IO;
+using System.Text;
 using Yggdrasil.Logging;
+using Yggdrasil.Network.Communication;
 using Yggdrasil.Util;
 using Yggdrasil.Util.Commands;
 
@@ -61,15 +66,220 @@ namespace Kakia.TW.World.Commands
 
 			// Dev
 			this.Add("test", "", "", this.HandleTest);
+			this.Add("testdialog", "", "Test hardcoded dialog packet", this.HandleTestDialog);
+			this.Add("testdialogmenu", "", "Test hardcoded dialog packet", this.HandleTestDialogMenu);
+
+			this.AddAlias("testdialog", "td");
+			this.AddAlias("testdialogmenu", "tdm");
 		}
 
 		private CommandResult HandleTest(Player sender, Player target, string message, string commandName, Arguments args)
 		{
-			var npc = new Npc("TestNPC", 2203235);
+			// 2203235
+			var npc = new Npc("TestNPC", 2200004);
 			npc.Position = sender.Position;
 			npc.Direction = (Direction)RandomProvider.Get().Next(8);
+
+			// Assign a test dialog script
+			npc.Script = async (dialog) =>
+			{
+				// Visual novel messages - sent all at once, client handles pacing
+				dialog.Message("Hello there, adventurer!");
+				dialog.Message("Welcome to the Kakia TalesWeaver Private Server.\nI'm here to test the dialog system.");
+				dialog.Close(); // Close visual novel before showing menu
+
+				// In-game select menu - requires await for user input
+				var choice = await dialog.Select("What would you like to do?",
+					"Tell me about this server",
+					"Show me your dance moves",
+					"Give me some gold",
+					"Goodbye");
+
+				switch (choice)
+				{
+					case 0: // Tell me about this server
+						dialog.Message("This server is being built from scratch!");
+						dialog.Message("The dialog system uses async/await\nfor smooth conversation flow.");
+						dialog.Message("Pretty cool, right?");
+						break;
+
+					case 1: // Dance moves
+						dialog.Message("*does a little dance*");
+						dialog.Message("Ta-da! Not bad for an NPC, huh?");
+						break;
+
+					case 2: // Gold
+						dialog.Message("Ha! You wish!");
+						dialog.Message("Maybe in a future update...");
+						break;
+
+					case 3: // Goodbye
+						dialog.Message("Safe travels, adventurer!");
+						break;
+				}
+
+				dialog.End(); // Close visual novel and end dialog session
+			};
+
 			sender.Instance.AddNpc(npc, true);
 			Send.SpawnHardcoded(sender.Connection, npc);
+
+			return CommandResult.Okay;
+		}
+
+		/// <summary>
+		/// Test hardcoded dialog packet - exact copy from legacy ClickedEntityHandler
+		/// </summary>
+		private CommandResult HandleTestDialog(Player sender, Player target, string message, string commandName, Arguments args)
+		{
+			var conn = sender.Connection;
+
+			var packet = new Packet(Op.FriendDialogResponse);
+			packet.PutByte((byte)DialogActionType.Dialog);
+			packet.PutByte((byte)0);
+			packet.PutByte((byte)0);
+			packet.PutByte((byte)1);
+			packet.PutByte((byte)0);
+			packet.PutBinFromHex("44 05 00 00 01 00");
+			conn.Send(packet);
+
+			packet = new Packet(Op.FriendDialogResponse);
+
+			packet.PutByte((byte)DialogActionType.Dialog);
+			packet.PutByte((byte)DialogOptionType.HasOptions);
+
+			// Dialog Portrait Model Id
+			// 2200000 2201538 (Check where model ids start).
+
+			packet.PutUInt(_modelId++);
+			packet.PutInt(0);
+			packet.PutString("This is a test message.", false);
+			packet.PutByte((byte)0x01); // Unknown
+
+			conn.Send(packet);
+
+			packet = new Packet(Op.FriendDialogResponse);
+			packet.PutBinFromHex(@"05 02 00 21 97 C2 00 00 00 00 9A 83 4A 83 8C
+				83 93 82 CC 94 AF 82 CC 96 D1 82 AA 82 A0 82 DC
+				82 E8 82 C9 82 E0 8B 43 82 C9 82 C8 82 C1 82 C4
+				81 42 3C 2F 6E 3E 82 A0 82 EA 82 F0 8C A9 82 C4
+				81 41 8E E8 93 FC 82 EA 82 F0 82 B5 82 C4 82 A2
+				82 C8 82 A2 82 B5 81 41 8A AE 91 53 82 C9 8C A2
+				96 D1 82 B6 82 E1 82 C8 82 A2 82 CC 81 48 82 A0
+				82 C8 82 BD 82 E0 94 AF 82 CC 96 D1 82 CC 8E E8
+				93 FC 82 EA 82 CD 82 B5 82 C1 82 A9 82 E8 82 C6
+				82 B5 82 C4 82 A8 82 A2 82 BD 95 FB 82 AA 97 C7
+				82 A2 82 E6 81 42");
+			conn.Send(packet);
+
+			packet = new Packet(Op.FriendDialogResponse);
+			packet.PutBinFromHex("05 05 03 C0 68 24 03 C0 71 9B");
+
+			conn.Send(packet);
+
+			packet = new Packet(Op.FriendDialogResponse);
+			packet.PutBinFromHex("05 01");
+
+			conn.Send(packet);
+
+			return CommandResult.Okay;
+		}
+
+		private static uint _modelId = 2200002;
+		/// <summary>
+		/// Test hardcoded dialog packet - exact copy from legacy ClickedEntityHandler
+		/// </summary>
+		private CommandResult HandleTestDialogMenu(Player sender, Player target, string message, string commandName, Arguments args)
+		{
+			var conn = sender.Connection;
+
+			var packet = new Packet(Op.FriendDialogResponse);
+
+			packet.PutByte((byte)DialogActionType.DialogSelectMenu);
+			packet.PutByte((byte)DialogOptionType.HasOptions);
+
+			// Dialog Answer ID?
+			packet.PutULong(1);
+
+			// Dialog Portrait Model Id
+			// 2200000 2201538 (Check where model ids start).
+
+			packet.PutUInt(_modelId++);
+			packet.PutByte(0x00);
+			packet.PutString("This is a test message.", false);
+
+			var optionCounts = 4;
+			// Options
+			packet.PutByte((byte)optionCounts); // Option count
+			packet.PutByte((byte)0x00); // Unknown
+
+			string[] options = {
+				"Let try the next one.",
+				"Let me try the previous one.",
+				"Turn me back to normal.",
+				"Nevermind."
+			};
+
+			for (var i = 0; i < optionCounts; i++)
+			{
+				//byte[] optBytes = System.Text.Encoding.GetEncoding("shift-jis").GetBytes(opt);
+				packet.PutString(options[i]);
+			}
+
+			conn.Send(packet);
+			/**
+			// Exact bytes from legacy Outfitter dialog (0x44 0x04 0x02 format)
+			// This is the menu dialog with portrait
+			using var ms = new MemoryStream();
+			using var writer = new BinaryWriter(ms);
+
+			writer.Write((byte)0x44);  // Opcode
+			writer.Write((byte)0x04);  // Subtype: Menu dialog
+			writer.Write((byte)0x02);  // With options
+
+			// Dialog Answer ID (8 bytes, written as ulong)
+			ulong dialogAnswerId = 1;
+			writer.Write(dialogAnswerId);
+
+			// Model ID for portrait (4 bytes)
+			uint modelId = 2201600; // 0x002197C0
+			writer.Write(modelId);
+
+			writer.Write((byte)0x00); // Unknown
+
+			// Message
+			Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+			string msg = "Dress to impress!\nWant to try out a new outfit?\nPerhaps add some flair?";
+			byte[] msgBytes = Encoding.GetEncoding("shift-jis").GetBytes(msg);
+			writer.Write((byte)msgBytes.Length);
+			writer.Write(msgBytes);
+
+			// Options
+			writer.Write((byte)0x04); // Option count
+			writer.Write((byte)0x00); // Unknown
+
+			string[] options = {
+				"Let try the next one.",
+				"Let me try the previous one.",
+				"Turn me back to normal.",
+				"Nevermind."
+			};
+
+			foreach (var opt in options)
+			{
+				byte[] optBytes = System.Text.Encoding.GetEncoding("shift-jis").GetBytes(opt);
+				writer.Write((byte)optBytes.Length);
+				writer.Write(optBytes);
+				writer.Write((byte)0x00); // Null terminator
+			}
+
+			// Send raw bytes with proper framing
+			byte[] packetBytes = ms.ToArray();
+			Msg(sender, $"Sending hardcoded dialog packet ({packet.Length} bytes)");
+			Msg(sender, $"Hex: {BitConverter.ToString(packetBytes).Replace("-", " ")}");
+
+			conn.SendRaw(packetBytes);
+			**/
 
 			return CommandResult.Okay;
 		}

@@ -77,6 +77,13 @@ namespace Kakia.TW.Shared.Network
 		AttackAck = 0x4A,
 		EntityClickAck = 0x70,
 
+		// ================================================================
+		// Entity Interaction packets (used during NPC dialog)
+		// ================================================================
+		EntityFocusResponse = 0x83,
+		InteractionConfirmResponse = 0x14,
+		InteractionTimerResponse = 0x49,
+
 		Unknown = 0xFF,
 	}
 
@@ -117,8 +124,8 @@ namespace Kakia.TW.Shared.Network
 
 	public enum SpawnType : byte
 	{
-		Unknown = 0x00,
-		Player = 0x01,
+		Player = 0x00,
+		Npc = 0x01,
 		MonsterNpc = 0x02,
 		Item = 0x03,
 		Portal = 0x04,
@@ -234,5 +241,23 @@ namespace Kakia.TW.Shared.Network
 		NpcDialog = 5,
 		DialogResponse = 6,
 		BossBattleResult = 7,
+	}
+
+	public enum FriendDialogFlagType : byte
+	{
+		HasPortrait = 2,
+	}
+
+	public enum DialogActionType : byte
+	{
+		DialogSelectMenu = 4,
+		Dialog = 5,
+	}
+
+	public enum DialogOptionType : byte
+	{
+		NumberInput1 = 0,
+		NumberInput2 = 1,
+		HasOptions = 2,
 	}
 }

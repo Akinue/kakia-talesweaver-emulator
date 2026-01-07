@@ -156,6 +156,27 @@ namespace Kakia.TW.Shared.Network
 		}
 
 		/// <summary>
+		/// Sends raw bytes to the client (with framing/encryption).
+		/// Useful for testing hardcoded packet bytes.
+		/// </summary>
+		/// <param name="payload">Raw packet bytes (OpCode + Body)</param>
+		public void SendRaw(byte[] payload)
+		{
+			PaleLogger.Log(true, payload);
+
+			var buffer = _framer.Frame(payload);
+
+			try
+			{
+				this.Send(buffer);
+			}
+			catch (SocketException)
+			{
+				this.Close();
+			}
+		}
+
+		/// <summary>
 		/// Called when an exception occurred while reading data from
 		/// the TCP stream.
 		/// </summary>
