@@ -4,46 +4,52 @@ using Kakia.TW.World.Entities;
 using Kakia.TW.World.Managers;
 using Kakia.TW.World.Network;
 
-public class Player : Entity
+namespace Kakia.TW.World.Entities
 {
-	public WorldConnection Connection { get; }
-	public WorldCharacter Data { get; }
-
-	public Player(WorldConnection conn, WorldCharacter data)
+	public class Player : Entity
 	{
-		Connection = conn;
-		Data = data;
-		ObjectPos = data.ObjectPos;
-	}
+		public WorldConnection Connection { get; }
+		public WorldCharacter Data { get; }
 
-	public override void Update(TimeSpan elapsed)
-	{
-		// Regen HP/MP, handle buffs
-	}
+		public Player(WorldConnection conn, WorldCharacter data)
+		{
+			Connection = conn;
+			Data = data;
+			Position = new Position(data.X, data.Y);
+			Direction = data.Direction;
+		}
 
-	public void Warp(ushort mapId, ushort zoneId, ushort x, ushort y)
-	{
-		// 1. Remove from current map
-		Instance?.Leave(this);
+		public override void Update(TimeSpan elapsed)
+		{
+			// Regen HP/MP, handle buffs
+		}
 
-		// 2. Get new map
-		var newMap = WorldServer.Instance.World.Maps.GetMap(mapId, zoneId);
-		if (newMap == null) return; // Error handling
+		public void Warp(ushort mapId, ushort zoneId, ushort x, ushort y)
+		{
+			// 1. Remove from current map
+			Instance?.Leave(this);
 
-		// 3. Update Position
-		Data.ObjectPos.Position.X = x;
-		Data.ObjectPos.Position.Y = y;
-		ObjectPos = Data.ObjectPos;
+			// 2. Get new map
+			var newMap = WorldServer.Instance.World.Maps.GetMap(mapId, zoneId);
+			if (newMap == null) return; // Error handling
 
-		// 4. Enter new map (This triggers MapChange packet and Spawns)
-		newMap.Enter(this);
+			// 3. Update Position
+			Data.MapId = mapId;
+			Data.ZoneId = zoneId;
+			Data.X = x;
+			Data.Y = y;
+			Position = new Position(x, y);
 
-		// 5. Save location to DB
-		WorldServer.Instance.Database.SaveCharacterPosition(this.Data);
-	}
+			// 4. Enter new map (This triggers MapChange packet and Spawns)
+			newMap.Enter(this);
 
-	public void Save()
-	{
-		WorldServer.Instance.Database.SaveCharacterFull(this.Data);
+			// 5. Save location to DB
+			WorldServer.Instance.Database.SaveCharacterPosition(this.Data);
+		}
+
+		public void Save()
+		{
+			WorldServer.Instance.Database.SaveCharacterFull(this.Data);
+		}
 	}
 }

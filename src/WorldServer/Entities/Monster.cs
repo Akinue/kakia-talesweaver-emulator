@@ -9,10 +9,8 @@ namespace Kakia.TW.World.Entities
 	public class Monster : Entity
 	{
 		public string Name { get; set; }
-		public uint ModelId { get; set; } // Sprite ID
 		public uint MaxHP { get; set; }
 		public uint CurrentHP { get; set; }
-		public byte Direction { get; set; }
 
 		// Reference to the Spawner that created this monster (to notify on death)
 		public Spawner SourceSpawner { get; set; }

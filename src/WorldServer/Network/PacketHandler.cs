@@ -100,19 +100,19 @@ namespace Kakia.TW.World.Network
 			Send.Connected(conn); // 0x7E
 
 			// Use the map position from the database (includes MapId, ZoneId, X, Y)
-			ushort mapId = user.ObjectPos.Position.MapId;
-			ushort zoneId = (ushort)user.ObjectPos.Position.ZoneId;
+			ushort mapId = user.MapId;
+			ushort zoneId = user.ZoneId;
 
 			// Default to Narvik starter area if not set
 			if (mapId == 0 || zoneId == 0)
 			{
 				mapId = 6;
 				zoneId = 38656;
-				user.ObjectPos.Position.X = 305;
-				user.ObjectPos.Position.Y = 220;
+				user.X = 305;
+				user.Y = 220;
 			}
 
-			Log.Info($"World: Spawning '{selectedCharName}' at Map {mapId}-{zoneId} ({user.ObjectPos.Position.X},{user.ObjectPos.Position.Y})");
+			Log.Info($"World: Spawning '{selectedCharName}' at Map {mapId}-{zoneId} ({user.X},{user.Y})");
 
 			Send.MapChange(conn, mapId, zoneId); // 0x15 Map Packet
 
@@ -177,7 +177,7 @@ namespace Kakia.TW.World.Network
 				ushort y = packet.GetUShort();
 
 				// Fix: Check if Direction byte exists before reading
-				byte dir = conn.Player?.ObjectPos.Direction ?? 0;
+				byte dir = (byte)(conn.Player?.Direction ?? 0);
 				if (packet.Length > 7)
 				{
 					dir = packet.GetByte();
@@ -186,13 +186,14 @@ namespace Kakia.TW.World.Network
 				// Update Server State
 				if (conn.Player != null)
 				{
-					var previousX = conn.Player.ObjectPos.Position.X;
-					var previousY = conn.Player.ObjectPos.Position.Y;
+					var previousX = conn.Player.Position.X;
+					var previousY = conn.Player.Position.Y;
 
-					conn.Player.ObjectPos.Position.X = x;
-					conn.Player.ObjectPos.Position.Y = y;
-					conn.Player.ObjectPos.Direction = dir;
-					conn.Player.Data.ObjectPos = conn.Player.ObjectPos;
+					conn.Player.Position = new Position(x, y);
+					conn.Player.Direction = (Direction)dir;
+					conn.Player.Data.X = x;
+					conn.Player.Data.Y = y;
+					conn.Player.Data.Direction = (Direction)dir;
 
 					// Broadcast movement to other players
 					if (conn.Player.Instance != null)
@@ -209,9 +210,9 @@ namespace Kakia.TW.World.Network
 					ushort x = packet.GetUShort();
 					ushort y = packet.GetUShort();
 
-					conn.Player.ObjectPos.Position.X = x;
-					conn.Player.ObjectPos.Position.Y = y;
-					conn.Player.Data.ObjectPos = conn.Player.ObjectPos;
+					conn.Player.Position = new Position(x, y);
+					conn.Player.Data.X = x;
+					conn.Player.Data.Y = y;
 
 					// Check for portal collision after movement update
 					CheckPortalCollision(conn);
@@ -224,8 +225,8 @@ namespace Kakia.TW.World.Network
 			if (conn.Player?.Instance == null) return;
 
 			var portal = conn.Player.Instance.FindPortalAt(
-				conn.Player.ObjectPos.Position.X,
-				conn.Player.ObjectPos.Position.Y
+				conn.Player.Position.X,
+				conn.Player.Position.Y
 			);
 
 			if (portal != null)
@@ -394,8 +395,8 @@ namespace Kakia.TW.World.Network
 
 			if (conn.Player == null) return;
 
-			conn.Player.ObjectPos.Direction = direction;
-			conn.Player.Data.ObjectPos.Direction = direction;
+			conn.Player.Direction = (Direction)direction;
+			conn.Player.Data.Direction = (Direction)direction;
 
 			// Broadcast to other players on the map
 			if (conn.Player.Instance != null)

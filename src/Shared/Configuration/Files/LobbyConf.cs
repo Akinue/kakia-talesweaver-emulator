@@ -14,7 +14,7 @@ namespace Kakia.TW.Shared.Configuration.Files
 		public string ServerIp { get; set; }
 		public string Name { get; set; }
 		public string StartMapStringId { get; set; }
-		public WorldPosition StartPosition { get; set; }
+		public Position StartPosition { get; set; }
 
 		/// <summary>
 		/// Loads the conf file and its options from the given path.
@@ -53,17 +53,13 @@ namespace Kakia.TW.Shared.Configuration.Files
 			else
 			{
 				this.StartMapStringId = split[0];
-				this.StartPosition = new WorldPosition()
-				{
-					X = x,
-					Y = y,
-				};
+				this.StartPosition = new Position(x, y);
 				return;
 			}
 
 			// Fallback
 			this.StartMapStringId = "prt_vilg02";
-			this.StartPosition = new WorldPosition { X = 99, Y = 81 };
+			this.StartPosition = new Position(99, 81);
 		}
 	}
 }

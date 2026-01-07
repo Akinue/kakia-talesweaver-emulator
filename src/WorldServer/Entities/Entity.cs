@@ -14,8 +14,8 @@ namespace Kakia.TW.World.Entities
 		public uint ObjectId { get; internal set; }
 
 		public uint ModelId { get; set; }
-
-		public ObjectPos ObjectPos { get; set; } = new();
+		public Position Position { get; set; }
+		public Direction Direction { get; set; }
 		public Map Instance { get; set; }
 
 		public abstract void Update(TimeSpan elapsed);

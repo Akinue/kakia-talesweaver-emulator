@@ -60,12 +60,8 @@ namespace Kakia.TW.World.Managers
 			// Map will assign ObjectId via RegisterEntity
 			_currentMob = new Monster(_mobName, _mobModelId)
 			{
-				ObjectPos = new ObjectPos
-				{
-					Position = new WorldPosition(_map.MapId, _map.ZoneId, _x, _y),
-					Direction = _direction
-				},
-				Direction = _direction,
+				Position = new Position(_x, _y),
+				Direction = (Direction)_direction,
 				MaxHP = _maxHp,
 				CurrentHP = _maxHp,
 				SourceSpawner = this

@@ -12,7 +12,6 @@ namespace Kakia.TW.World.Entities
 	public class Npc : Entity
 	{
 		public string Name { get; set; }
-		public byte Direction { get; set; }
 
 		// The script to run when clicked
 		public DialogFunc? Script { get; set; }

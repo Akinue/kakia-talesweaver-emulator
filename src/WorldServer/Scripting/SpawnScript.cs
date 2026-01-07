@@ -87,14 +87,10 @@ namespace Kakia.TW.World.Scripting
 
 			var monster = new Monster(name, modelId)
 			{
-				Direction = direction,
+				Position = new Position(x, y),
+				Direction = (Direction)direction,
 				MaxHP = maxHp,
-				CurrentHP = maxHp,
-				ObjectPos = new ObjectPos
-				{
-					Position = new WorldPosition(mapId, zoneId, x, y),
-					Direction = direction
-				}
+				CurrentHP = maxHp
 			};
 
 			map.AddMonster(monster);

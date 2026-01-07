@@ -86,11 +86,11 @@ namespace Kakia.TW.World.Database
 						StatDex = reader.GetInt16("stat_dex"),
 						StatAgi = reader.GetInt16("stat_agi"),
 
-						// Position (includes MapId, ZoneId, X, Y)
-						ObjectPos = new ObjectPos
-						{
-							Position = new WorldPosition(mapId, zoneId, x, y)
-						}
+						// Position
+						MapId = mapId,
+						ZoneId = (ushort)zoneId,
+						X = x,
+						Y = y
 					};
 
 					// Deserialize Blob
@@ -147,10 +147,10 @@ namespace Kakia.TW.World.Database
 		{
 			using var conn = GetConnection();
 			using var cmd = new MySqlCommand("UPDATE characters SET map_id = @map, zone_id = @zone, x = @x, y = @y WHERE characterId = @id", conn);
-			cmd.Parameters.AddWithValue("@map", c.ObjectPos.Position.MapId);
-			cmd.Parameters.AddWithValue("@zone", c.ObjectPos.Position.ZoneId);
-			cmd.Parameters.AddWithValue("@x", c.ObjectPos.Position.X);
-			cmd.Parameters.AddWithValue("@y", c.ObjectPos.Position.Y);
+			cmd.Parameters.AddWithValue("@map", c.MapId);
+			cmd.Parameters.AddWithValue("@zone", c.ZoneId);
+			cmd.Parameters.AddWithValue("@x", c.X);
+			cmd.Parameters.AddWithValue("@y", c.Y);
 			cmd.Parameters.AddWithValue("@id", c.UserId);
 			cmd.ExecuteNonQuery();
 		}

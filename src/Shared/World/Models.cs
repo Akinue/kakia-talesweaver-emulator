@@ -15,33 +15,91 @@
 		Evasion = 8,
 	}
 
-	public class WorldPosition
+	/// <summary>
+	/// Simple 2D position with X, Y coordinates.
+	/// </summary>
+	public struct Position
 	{
-		public ushort MapId { get; set; }
-		public int ZoneId { get; set; }
-		public ushort X { get; set; }
-		public ushort Y { get; set; }
+		public ushort X;
+		public ushort Y;
 
-		public WorldPosition() { }
-		public WorldPosition(ushort mapId, ushort x, ushort y)
+		public Position(ushort x, ushort y)
 		{
-			MapId = mapId;
 			X = x;
 			Y = y;
 		}
-		public WorldPosition(ushort mapId, int zoneId, ushort x, ushort y)
+
+		// Arithmetic operators
+		public static Position operator +(Position a, Position b) => new((ushort)(a.X + b.X), (ushort)(a.Y + b.Y));
+		public static Position operator -(Position a, Position b) => new((ushort)(a.X - b.X), (ushort)(a.Y - b.Y));
+
+		// Distance calculations
+		public readonly int DistanceSquared(Position other)
 		{
-			MapId = mapId;
-			ZoneId = zoneId;
-			X = x;
-			Y = y;
+			int dx = X - other.X;
+			int dy = Y - other.Y;
+			return dx * dx + dy * dy;
 		}
+
+		public readonly double Distance(Position other) => Math.Sqrt(DistanceSquared(other));
+
+		public readonly int ManhattanDistance(Position other) => Math.Abs(X - other.X) + Math.Abs(Y - other.Y);
+
+		// Linear interpolation
+		public readonly Position Lerp(Position target, float t)
+		{
+			return new Position(
+				(ushort)(X + (target.X - X) * t),
+				(ushort)(Y + (target.Y - Y) * t)
+			);
+		}
+
+		// Direction between two positions (8-direction)
+		public readonly Direction DirectionTo(Position target)
+		{
+			int dx = target.X - X;
+			int dy = target.Y - Y;
+
+			// Handle zero movement
+			if (dx == 0 && dy == 0) return Direction.South;
+
+			// Calculate angle and map to 8 directions
+			double angle = Math.Atan2(dy, dx) * (180.0 / Math.PI);
+			angle = (angle + 360) % 360; // Normalize to 0-360
+
+			// Map angle to 8 directions (each direction covers 45 degrees)
+			return angle switch
+			{
+				< 22.5 or >= 337.5 => Direction.East,
+				< 67.5 => Direction.SouthEast,
+				< 112.5 => Direction.South,
+				< 157.5 => Direction.SouthWest,
+				< 202.5 => Direction.West,
+				< 247.5 => Direction.NorthWest,
+				< 292.5 => Direction.North,
+				_ => Direction.NorthEast
+			};
+		}
+
+		// In range check
+		public readonly bool InRange(Position other, int range) => DistanceSquared(other) <= range * range;
+
+		public override readonly string ToString() => $"({X}, {Y})";
 	}
 
-	public class ObjectPos
+	/// <summary>
+	/// TalesWeaver 8-direction facing.
+	/// </summary>
+	public enum Direction : byte
 	{
-		public WorldPosition Position { get; set; } = new();
-		public byte Direction { get; set; }
+		North = 0,
+		NorthEast = 1,
+		East = 2,
+		SouthEast = 3,
+		South = 4,
+		SouthWest = 5,
+		West = 6,
+		NorthWest = 7
 	}
 
 	public class CharacterSummary
@@ -130,7 +188,23 @@
 	{
 		public uint UserId { get; set; }
 		public string Name { get; set; } = string.Empty;
-		public ObjectPos ObjectPos { get; set; } = new();
+
+		// Position - flat fields for DB storage
+		public ushort MapId { get; set; }
+		public ushort ZoneId { get; set; }
+		public ushort X { get; set; }
+		public ushort Y { get; set; }
+		public Direction Direction { get; set; }
+
+		/// <summary>
+		/// Computed Position from X/Y for convenience. Setting this updates X and Y.
+		/// </summary>
+		public Position Position
+		{
+			get => new(X, Y);
+			set { X = value.X; Y = value.Y; }
+		}
+
 		public bool IsGM { get; set; } = true;
 		public uint LastLoginTime { get; set; }
 		public uint CreationTime { get; set; }
@@ -269,8 +343,8 @@
 	public class WarpPortal
 	{
 		public uint Id { get; set; }
-		public WorldPosition MinPoint { get; set; } = new();
-		public WorldPosition MaxPoint { get; set; } = new();
+		public Position MinPoint { get; set; }
+		public Position MaxPoint { get; set; }
 		public ushort DestMapId { get; set; }
 		public ushort DestPortalId { get; set; }
 	}

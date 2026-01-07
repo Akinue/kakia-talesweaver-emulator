@@ -66,13 +66,9 @@ namespace Kakia.TW.World.Scripting
 			// Map will assign ObjectId via RegisterEntity
 			var npc = new Npc(name, modelId)
 			{
-				Direction = direction,
-				Script = dialogFunc,
-				ObjectPos = new ObjectPos
-				{
-					Position = new WorldPosition(mapId, zoneId, x, y),
-					Direction = direction
-				}
+				Position = new Position(x, y),
+				Direction = (Direction)direction,
+				Script = dialogFunc
 			};
 
 			map.AddNpc(npc);
@@ -98,14 +94,11 @@ namespace Kakia.TW.World.Scripting
 			// Map will assign ObjectId via RegisterEntity
 			var warp = new Warp()
 			{
+				Position = new Position(x, y),
 				DestMapId = destMapId,
 				DestZoneId = destZoneId,
 				DestX = destX,
-				DestY = destY,
-				ObjectPos = new ObjectPos
-				{
-					Position = new WorldPosition(mapId, zoneId, x, y)
-				}
+				DestY = destY
 			};
 
 			map.AddWarp(warp);

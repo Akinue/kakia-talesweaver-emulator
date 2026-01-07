@@ -67,9 +67,9 @@ namespace Kakia.TW.Shared.Network.Helpers
 			packet.PutByte(c.IsGM ? (byte)1 : (byte)0); // GM
 			packet.PutByte(0); // UnkByte1
 			packet.PutShort(0); // UnkShort1
-			packet.PutUShort(c.Position.Position.X);
-			packet.PutUShort(c.Position.Position.Y);
-			packet.PutByte(c.Position.Direction);
+			packet.PutUShort(c.X);
+			packet.PutUShort(c.Y);
+			packet.PutByte((byte)c.Direction);
 			packet.PutByte(0); // Unk
 
 			// 5.3 Basic Stats Block
@@ -149,9 +149,9 @@ namespace Kakia.TW.Shared.Network.Helpers
 			packet.PutShort(0); // UnkShort1
 
 			// 4. Position
-			packet.PutUShort(c.ObjectPos.Position.X);
-			packet.PutUShort(c.ObjectPos.Position.Y);
-			packet.PutByte(c.ObjectPos.Direction);
+			packet.PutUShort(c.X);
+			packet.PutUShort(c.Y);
+			packet.PutByte((byte)c.Direction);
 
 			packet.PutByte(0); // Unk
 

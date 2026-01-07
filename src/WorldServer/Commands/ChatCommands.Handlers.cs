@@ -66,8 +66,8 @@ namespace Kakia.TW.World.Commands
 		private CommandResult HandleTest(Player sender, Player target, string message, string commandName, Arguments args)
 		{
 			var npc = new Npc("TestNPC", 2203235);
-			npc.ObjectPos = sender.ObjectPos;
-			npc.Direction = (byte)RandomProvider.Get().Next(8);
+			npc.Position = sender.Position;
+			npc.Direction = (Direction)RandomProvider.Get().Next(8);
 			sender.Instance.AddNpc(npc, true);
 			Send.SpawnHardcoded(sender.Connection, npc);
 
@@ -116,12 +116,11 @@ namespace Kakia.TW.World.Commands
 		/// </summary>
 		private CommandResult HandleWhere(Player sender, Player target, string message, string commandName, Arguments args)
 		{
-			var pos = target.ObjectPos;
-			var mapId = pos.Position.MapId;
-			var zoneId = pos.Position.ZoneId;
-			var x = pos.Position.X;
-			var y = pos.Position.Y;
-			var dir = pos.Direction;
+			var mapId = target.Data.MapId;
+			var zoneId = target.Data.ZoneId;
+			var x = target.Position.X;
+			var y = target.Position.Y;
+			var dir = target.Direction;
 
 			Msg(sender, $"Map: {mapId}-{zoneId}, Position: ({x}, {y}), Direction: {dir}");
 			return CommandResult.Okay;
@@ -535,22 +534,12 @@ namespace Kakia.TW.World.Commands
 			}
 
 			// Map will assign ObjectId via RegisterEntity
-			var monster = new Entities.Monster(monsterData.Name, (uint)monsterData.ModelId)
+			var monster = new Monster(monsterData.Name, (uint)monsterData.ModelId)
 			{
 				MaxHP = (uint)monsterData.MaxHP,
 				CurrentHP = (uint)monsterData.MaxHP,
-				Direction = target.ObjectPos.Direction,
-				ObjectPos = new ObjectPos
-				{
-					Position = new WorldPosition
-					{
-						MapId = target.ObjectPos.Position.MapId,
-						ZoneId = target.ObjectPos.Position.ZoneId,
-						X = target.ObjectPos.Position.X,
-						Y = target.ObjectPos.Position.Y
-					},
-					Direction = target.ObjectPos.Direction
-				}
+				Position = target.Position,
+				Direction = target.Direction
 			};
 
 			target.Instance.AddMonster(monster);

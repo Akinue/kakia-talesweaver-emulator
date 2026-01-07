@@ -146,7 +146,7 @@ namespace Kakia.TW.World.Network
 		/// Spawns an Item on the ground.
 		/// Replaces EntitySpawnPacket (Action 0, Type 3)
 		/// </summary>
-		public static void SpawnItem(WorldConnection conn, GameItem item, WorldPosition pos, int ownerId)
+		public static void SpawnItem(WorldConnection conn, GameItem item, Position pos, int ownerId)
 		{
 			var packet = new Packet(Op.WorldResponse); // 0x07
 			packet.PutByte((byte)WorldPacketId.Spawn); // 0x00 (Spawn)
@@ -185,7 +185,7 @@ namespace Kakia.TW.World.Network
 		/// Spawns an NPC or Monster.
 		/// Replaces EntitySpawnPacket (Action 0, Type 2)
 		/// </summary>
-		public static void SpawnNpc(WorldConnection conn, uint objectId, uint npcId, WorldPosition pos, byte direction)
+		public static void SpawnNpc(WorldConnection conn, uint objectId, uint npcId, Position pos, Direction direction)
 		{
 			var packet = new Packet(Op.WorldResponse);
 			packet.PutByte((byte)WorldPacketId.Spawn);
@@ -198,7 +198,7 @@ namespace Kakia.TW.World.Network
 			packet.PutUInt(npcId);
 			packet.PutUShort(pos.X);
 			packet.PutUShort(pos.Y);
-			packet.PutByte(direction);
+			packet.PutByte((byte)direction);
 
 			conn.Send(packet);
 		}
@@ -213,9 +213,9 @@ namespace Kakia.TW.World.Network
 			packet.PutEmptyBin(4);
 			// 21 9E 63 01 
 			packet.PutUInt(entity.ModelId);
-			packet.PutUShort(entity.ObjectPos.Position.X);
-			packet.PutUShort(entity.ObjectPos.Position.Y);
-			packet.PutByte(entity.ObjectPos.Direction);
+			packet.PutUShort(entity.Position.X);
+			packet.PutUShort(entity.Position.Y);
+			packet.PutByte((byte)entity.Direction);
 			packet.PutByte(0);
 			packet.PutByte(10); // 0x0A
 			packet.PutLong(-1);
@@ -244,9 +244,9 @@ namespace Kakia.TW.World.Network
 			packet.PutByte((byte)(user.IsGM ? 1 : 0));
 			packet.PutByte(0); // Unk
 			packet.PutShort(0); // Unk
-			packet.PutUShort(user.ObjectPos.Position.X);
-			packet.PutUShort(user.ObjectPos.Position.Y);
-			packet.PutByte(user.ObjectPos.Direction);
+			packet.PutUShort(user.X);
+			packet.PutUShort(user.Y);
+			packet.PutByte((byte)user.Direction);
 			packet.PutByte(0); // Unk
 
 			// Basic Stats Block

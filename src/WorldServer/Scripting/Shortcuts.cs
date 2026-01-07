@@ -34,7 +34,7 @@ namespace Kakia.TW.World.Scripting
 				// Map will assign ObjectId via RegisterEntity
 				var warp = new Warp()
 				{
-					ObjectPos = new ObjectPos { Position = new WorldPosition(destMapId, x, y) },
+					Position = new Position(x, y),
 					DestMapId = destMapId,
 					DestZoneId = 1, // Default zone usually
 					DestX = destX,

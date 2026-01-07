@@ -153,8 +153,8 @@ namespace Kakia.TW.World.Managers
 					Send.MapChange(p.Connection, MapId, ZoneId);
 
 					// Spawn existing entities for the player using ObjectId
-					foreach (var m in _monsters.Values) Send.SpawnNpc(p.Connection, m.ObjectId, m.ModelId, m.ObjectPos.Position, m.Direction);
-					foreach (var w in _warps.Values) Send.SpawnPortal(p.Connection, new WarpPortal { Id = w.ObjectId, MinPoint = w.ObjectPos.Position, DestMapId = w.DestMapId, DestPortalId = 1 });
+					foreach (var m in _monsters.Values) Send.SpawnNpc(p.Connection, m.ObjectId, m.ModelId, m.Position, m.Direction);
+					foreach (var w in _warps.Values) Send.SpawnPortal(p.Connection, new WarpPortal { Id = w.ObjectId, MinPoint = w.Position, DestMapId = w.DestMapId, DestPortalId = 1 });
 
 					// Spawn this player for others
 					Broadcast(p, () =>
@@ -179,9 +179,9 @@ namespace Kakia.TW.World.Managers
 						pkt.PutUInt(m.ModelId);
 						pkt.PutUInt(0); // Unk
 						pkt.PutUInt(0); // Unk
-						pkt.PutUShort(m.ObjectPos.Position.X);
-						pkt.PutUShort(m.ObjectPos.Position.Y);
-						pkt.PutByte(m.Direction);
+						pkt.PutUShort(m.Position.X);
+						pkt.PutUShort(m.Position.Y);
+						pkt.PutByte((byte)m.Direction);
 						return pkt;
 					}, includeSelf: false);
 				}
@@ -197,8 +197,8 @@ namespace Kakia.TW.World.Managers
 					pkt.PutByte((byte)WorldPacketId.Spawn);
 					pkt.PutByte(0x04); // Type 4: Portal
 					pkt.PutUInt(w.ObjectId);
-					pkt.PutUShort(w.ObjectPos.Position.X);
-					pkt.PutUShort(w.ObjectPos.Position.Y);
+					pkt.PutUShort(w.Position.X);
+					pkt.PutUShort(w.Position.Y);
 					pkt.PutUShort(w.DestMapId);
 					pkt.PutUShort(1); // Dest Portal ID (visual only usually)
 					return pkt;
@@ -228,19 +228,19 @@ namespace Kakia.TW.World.Managers
 
 				foreach (var item in _items.Values)
 				{
-					Send.SpawnItem(player.Connection, item.ItemData, item.ObjectPos.Position, item.OwnerId);
+					Send.SpawnItem(player.Connection, item.ItemData, item.Position, item.OwnerId);
 				}
 
 				// Send existing NPCs to new player using ObjectId
 				foreach (var npc in _npcs.Values)
 				{
-					Send.SpawnNpc(player.Connection, npc.ObjectId, npc.ModelId, npc.ObjectPos.Position, npc.Direction);
+					Send.SpawnNpc(player.Connection, npc.ObjectId, npc.ModelId, npc.Position, npc.Direction);
 				}
 
 				// Send existing monsters to new player using ObjectId
 				foreach (var monster in _monsters.Values)
 				{
-					Send.SpawnNpc(player.Connection, monster.ObjectId, monster.ModelId, monster.ObjectPos.Position, monster.Direction);
+					Send.SpawnNpc(player.Connection, monster.ObjectId, monster.ModelId, monster.Position, monster.Direction);
 				}
 			}
 		}
@@ -292,7 +292,7 @@ namespace Kakia.TW.World.Managers
 				if (!includeSelf && p.ObjectId == source.ObjectId) continue;
 
 				// Simple distance check (e.g. 20 tiles)
-				if (IsInRange(source.ObjectPos, p.ObjectPos))
+				if (IsInRange(source.Position, p.Position))
 				{
 					p.Connection.Send(packet);
 				}
@@ -304,8 +304,8 @@ namespace Kakia.TW.World.Managers
 			foreach (var w in _warps.Values)
 			{
 				// Simple distance check (Portal is usually 1x1 or 3x3)
-				int dist = Math.Abs(p.ObjectPos.Position.X - w.ObjectPos.Position.X) +
-						   Math.Abs(p.ObjectPos.Position.Y - w.ObjectPos.Position.Y);
+				int dist = Math.Abs(p.Position.X - w.Position.X) +
+						   Math.Abs(p.Position.Y - w.Position.Y);
 
 				if (dist <= 1)
 				{
@@ -316,10 +316,10 @@ namespace Kakia.TW.World.Managers
 			}
 		}
 
-		private bool IsInRange(ObjectPos a, ObjectPos b)
+		private bool IsInRange(Position a, Position b)
 		{
-			var dx = a.Position.X - b.Position.X;
-			var dy = a.Position.Y - b.Position.Y;
+			var dx = a.X - b.X;
+			var dy = a.Y - b.Y;
 			// 20*20 = 400
 			return (dx * dx + dy * dy) <= 400;
 		}
@@ -371,8 +371,8 @@ namespace Kakia.TW.World.Managers
 			foreach (var warp in _warps.Values)
 			{
 				// Simple distance check (portal collision radius of 2 tiles)
-				int dx = Math.Abs(x - warp.ObjectPos.Position.X);
-				int dy = Math.Abs(y - warp.ObjectPos.Position.Y);
+				int dx = Math.Abs(x - warp.Position.X);
+				int dy = Math.Abs(y - warp.Position.Y);
 
 				if (dx <= 2 && dy <= 2)
 				{
@@ -404,7 +404,7 @@ namespace Kakia.TW.World.Managers
 				foreach (var player in _players.Values)
 				{
 					if (!silently)
-						Send.SpawnNpc(player.Connection, npc.ObjectId, npc.ModelId, npc.ObjectPos.Position, npc.Direction);
+						Send.SpawnNpc(player.Connection, npc.ObjectId, npc.ModelId, npc.Position, npc.Direction);
 				}
 			}
 		}
@@ -438,7 +438,7 @@ namespace Kakia.TW.World.Managers
 				// Broadcast monster spawn to all players on the map using ObjectId
 				foreach (var player in _players.Values)
 				{
-					Send.SpawnNpc(player.Connection, monster.ObjectId, monster.ModelId, monster.ObjectPos.Position, monster.Direction);
+					Send.SpawnNpc(player.Connection, monster.ObjectId, monster.ModelId, monster.Position, monster.Direction);
 				}
 			}
 		}
