@@ -1,0 +1,10 @@
+//------------------------------------------------
+//   Op: 0x43 (EntityClickRequest)
+//   Dir: Client -> Server
+//   Handler: WorldServer/PacketHandler.cs - ClickedEntityRequest()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+
+uint entityId <comment="Clicked entity object ID">;

@@ -1,0 +1,11 @@
+//------------------------------------------------
+//   Op: 0x15 (MapChangeResponse)
+//   Dir: Server -> Client
+//   Send: WorldServer/Send.cs - MapChange()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+
+ushort mapId;
+ushort zoneId;

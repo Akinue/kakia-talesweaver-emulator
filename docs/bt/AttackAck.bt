@@ -1,0 +1,10 @@
+//------------------------------------------------
+//   Op: 0x4A (AttackAck)
+//   Dir: Server -> Client
+//   Send: WorldServer/Send.cs - AttackAck()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+
+ubyte data[6] <comment="Attack acknowledgment data">;

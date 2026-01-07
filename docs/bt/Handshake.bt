@@ -1,0 +1,17 @@
+//------------------------------------------------
+//   Op: 0x00 (Handshake)
+//   Dir: Bidirectional (Server <-> Client)
+//   Send: */Send.cs - Handshake()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+ubyte id <comment="Usually 0x00">;
+ubyte subFlag <comment="0x02 = Server response with seed">;
+
+// Server Response (subFlag == 0x02)
+if (subFlag == 0x02) {
+    uint seed <format=hex, comment="Encryption seed">;
+    int ip <format=hex, comment="Server IP as integer">;
+    TwString motd <comment="Message of the day">;
+}

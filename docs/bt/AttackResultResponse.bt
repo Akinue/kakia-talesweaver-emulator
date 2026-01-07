@@ -1,0 +1,12 @@
+//------------------------------------------------
+//   Op: 0x48 (AttackResultResponse)
+//   Dir: Server -> Client
+//   Send: WorldServer/Send.cs - AttackResult()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+
+ubyte flag <comment="Usually 0x00">;
+uint characterId;
+ubyte result <comment="0xFF = attack complete">;

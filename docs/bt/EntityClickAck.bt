@@ -1,0 +1,11 @@
+//------------------------------------------------
+//   Op: 0x70 (EntityClickAck)
+//   Dir: Server -> Client
+//   Send: WorldServer/Send.cs - EntityClickAck()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+
+uint entityId <comment="Clicked entity object ID">;
+// Additional data may follow based on entity type

@@ -1,0 +1,139 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: EntitySpawnDebug.bt
+//   Authors: Kakia
+//   Purpose: Debug template showing all bytes with
+//            both LE and BE interpretations
+//------------------------------------------------
+
+local int fileLen = FileSize();
+Printf("=== Entity Spawn Debug ===\n");
+Printf("File size: %d bytes\n\n", fileLen);
+
+// Header (always same)
+Printf("=== HEADER ===\n");
+Printf("[0] Opcode: 0x%02X\n", ReadUByte(0));
+Printf("[1] Action: 0x%02X", ReadUByte(1));
+switch(ReadUByte(1)) {
+    case 0x00: Printf(" (SPAWN)\n"); break;
+    case 0x01: Printf(" (DESPAWN - 7 bytes only)\n"); break;
+    case 0x02: Printf(" (DEATH)\n"); break;
+    default: Printf(" (Unknown)\n"); break;
+}
+Printf("[2] Type:   0x%02X", ReadUByte(2));
+switch(ReadUByte(2)) {
+    case 0x00: Printf(" (Monster)\n"); break;
+    case 0x01: Printf(" (Extended NPC)\n"); break;
+    case 0x02: Printf(" (Zone NPC)\n"); break;
+    case 0x03: Printf(" (Type 3)\n"); break;
+    case 0x04: Printf(" (Portal)\n"); break;
+    case 0x05: Printf(" (Type 5)\n"); break;
+    case 0x06: Printf(" (Type 6)\n"); break;
+    default: Printf(" (Unknown)\n"); break;
+}
+
+// Bytes 3-6: Usually ObjectId
+if (fileLen >= 7) {
+    Printf("\n=== BYTES 3-6 (ObjectId) ===\n");
+    Printf("Raw hex: %02X %02X %02X %02X\n",
+        ReadUByte(3), ReadUByte(4), ReadUByte(5), ReadUByte(6));
+
+    LittleEndian();
+    Printf("As LE uint32: %u (0x%08X)\n", ReadUInt(3), ReadUInt(3));
+    BigEndian();
+    Printf("As BE uint32: %u (0x%08X)\n", ReadUInt(3), ReadUInt(3));
+}
+
+// Bytes 7-8
+if (fileLen >= 9) {
+    Printf("\n=== BYTES 7-8 ===\n");
+    Printf("Raw hex: %02X %02X\n", ReadUByte(7), ReadUByte(8));
+    LittleEndian();
+    Printf("As LE uint16: %u\n", ReadUShort(7));
+    BigEndian();
+    Printf("As BE uint16: %u\n", ReadUShort(7));
+}
+
+// Bytes 9-10
+if (fileLen >= 11) {
+    Printf("\n=== BYTES 9-10 ===\n");
+    Printf("Raw hex: %02X %02X\n", ReadUByte(9), ReadUByte(10));
+    LittleEndian();
+    Printf("As LE uint16: %u\n", ReadUShort(9));
+    BigEndian();
+    Printf("As BE uint16: %u\n", ReadUShort(9));
+}
+
+// Bytes 11-12
+if (fileLen >= 13) {
+    Printf("\n=== BYTES 11-12 ===\n");
+    Printf("Raw hex: %02X %02X\n", ReadUByte(11), ReadUByte(12));
+    LittleEndian();
+    Printf("As LE uint16: %u\n", ReadUShort(11));
+    BigEndian();
+    Printf("As BE uint16: %u\n", ReadUShort(11));
+}
+
+// Bytes 13-14
+if (fileLen >= 15) {
+    Printf("\n=== BYTES 13-14 ===\n");
+    Printf("Raw hex: %02X %02X\n", ReadUByte(13), ReadUByte(14));
+    LittleEndian();
+    Printf("As LE uint16: %u\n", ReadUShort(13));
+    BigEndian();
+    Printf("As BE uint16: %u\n", ReadUShort(13));
+}
+
+// Bytes 15-16
+if (fileLen >= 17) {
+    Printf("\n=== BYTES 15-16 ===\n");
+    Printf("Raw hex: %02X %02X\n", ReadUByte(15), ReadUByte(16));
+    LittleEndian();
+    Printf("As LE uint16: %u\n", ReadUShort(15));
+    BigEndian();
+    Printf("As BE uint16: %u\n", ReadUShort(15));
+}
+
+// Bytes 17-18
+if (fileLen >= 19) {
+    Printf("\n=== BYTES 17-18 ===\n");
+    Printf("Raw hex: %02X %02X\n", ReadUByte(17), ReadUByte(18));
+    LittleEndian();
+    Printf("As LE uint16: %u\n", ReadUShort(17));
+    BigEndian();
+    Printf("As BE uint16: %u\n", ReadUShort(17));
+}
+
+// Bytes 19-20
+if (fileLen >= 21) {
+    Printf("\n=== BYTES 19-20 ===\n");
+    Printf("Raw hex: %02X %02X\n", ReadUByte(19), ReadUByte(20));
+    LittleEndian();
+    Printf("As LE uint16: %u\n", ReadUShort(19));
+    BigEndian();
+    Printf("As BE uint16: %u\n", ReadUShort(19));
+    Printf("Byte 20 alone: %u\n", ReadUByte(20));
+}
+
+// Raw hex dump
+Printf("\n=== FULL HEX DUMP ===\n");
+local int i;
+Printf("Offset: ");
+for (i = 0; i < fileLen && i < 40; i++) {
+    Printf("%02d ", i);
+}
+Printf("\nHex:    ");
+for (i = 0; i < fileLen && i < 40; i++) {
+    Printf("%02X ", ReadUByte(i));
+}
+Printf("\n");
+
+// Create struct for visual display
+LittleEndian();
+typedef struct {
+    char Code;
+    char Flag;
+    char SpawnType;
+    if (fileLen > 3) uchar RawData[fileLen - 3];
+} rawFile <optimize=false>;

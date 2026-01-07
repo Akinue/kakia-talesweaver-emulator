@@ -1,0 +1,21 @@
+//------------------------------------------------
+//   Op: 0x6C (NpcDialogAnswerRequest)
+//   Dir: Client -> Server
+//   Handler: WorldServer/PacketHandler.cs - NpcDialogAnswerRequest()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+
+ubyte flag1;
+ubyte flag2 <comment="5 = dialog closed, 0 = next/response">;
+
+// flag2 == 5: Dialog was closed by player
+// flag2 == 0 or flag1 == 0: Simple "Next" button press
+
+if (flag2 != 5 && flag1 != 0) {
+    // Menu selection response
+    uint64 dialogId <comment="Dialog ID (Big Endian)">;
+    ushort padding;
+    ubyte selectedOption <comment="0-indexed option selection">;
+}

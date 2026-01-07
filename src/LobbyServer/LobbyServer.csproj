@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<OutputType>Exe</OutputType>
+		<RootNamespace>Kakia.TW.Lobby</RootNamespace>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<AssemblyTitle>LobbyServer</AssemblyTitle>
+		<Product>LobbyServer</Product>
+		<Copyright>Copyright © 2025</Copyright>
+		<AssemblyVersion>1.0.0.0</AssemblyVersion>
+		<FileVersion>1.0.0.0</FileVersion>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+		<OutputPath>..\..\bin\Debug\</OutputPath>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+		<OutputPath>..\..\bin\Release\</OutputPath>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Shared\Shared.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="ExecTails.Yggdrasil" Version="1.4.1" />
+		<PackageReference Include="ExecTails.Yggdrasil.Data.JSON" Version="1.0.1" />
+		<PackageReference Include="ExecTails.Yggdrasil.Scripting" Version="1.0.1" />
+	</ItemGroup>
+
+</Project>

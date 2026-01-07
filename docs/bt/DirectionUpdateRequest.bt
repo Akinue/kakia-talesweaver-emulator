@@ -1,0 +1,16 @@
+//------------------------------------------------
+//   Op: 0x11 (DirectionUpdateRequest)
+//   Dir: Bidirectional (Client <-> Server)
+//   Handler: WorldServer/PacketHandler.cs - UpdateDirection()
+//   Send: WorldServer/Send.cs - DirectionUpdate()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+
+// Client -> Server: Just direction
+// Server -> Client: ObjectId + Direction
+if (FTell() < FileSize() - 1) {
+    uint objectId;
+}
+ubyte direction <comment="0-7 direction value">;

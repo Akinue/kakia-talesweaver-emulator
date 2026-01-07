@@ -1,0 +1,66 @@
+//------------------------------------------------
+//   Op: 0x33 subOp 0x00 (SpawnUser)
+//   Dir: Server -> Client
+//   Send: WorldServer/Send.cs - SpawnUser()
+//   Note: Uses MovementRequest opcode with subOp 0x00
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+
+ubyte subOp <format=hex, comment="0x00 = Spawn User">;
+
+if (subOp == 0x00) {
+    // Character spawn data
+    uint userId;
+    ubyte isSelf <comment="1 = Self, 0 = Other player">;
+    ubyte isGM <comment="1 = GM flag">;
+    ubyte unk1;
+    short unk2;
+    Position pos;
+    ubyte direction;
+    ubyte unk3;
+
+    // Basic Stats Block (placeholder - actual structure varies)
+    ubyte basicStats[5] <comment="Basic stats block">;
+
+    TwString name;
+    uint guildId;
+
+    // Health values (stored reversed in some versions)
+    uint64 currentHp;
+    uint64 maxHp;
+
+    // Guild/Team info block
+    ubyte guildInfo[6] <comment="Guild team info">;
+
+    ubyte unk4;
+    ushort unk5;
+    ushort outfitId;
+    uint unk6;
+    uint modelId;
+
+    // Equipment block (variable length)
+    ubyte equipBlock[16] <comment="Equipment data">;
+
+    ubyte unk7;
+    ubyte unk8;
+
+    // Character appearance
+    CharacterAppearance appearance;
+
+    uint unk9;
+    ubyte guildNameFlag;
+    uint unk10;
+    uint titleId;
+
+    // Remaining data (state/status blocks)
+    // Size varies based on character state
+}
+else if (subOp == 0x01) {
+    // InitObjectId
+    uint objectId <comment="Player's object ID for movement">;
+}
+else {
+    Printf("Unknown SubOp for 0x33: %02X\n", subOp);
+}

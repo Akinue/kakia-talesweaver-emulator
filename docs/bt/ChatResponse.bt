@@ -1,0 +1,11 @@
+//------------------------------------------------
+//   Op: 0x0D (ChatResponse)
+//   Dir: Server -> Client
+//   Send: WorldServer/Send.cs - Chat(), ChatBroadcast()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+ubyte subType <comment="Chat channel type">;
+uint senderId <comment="Character ID of sender">;
+TwString message;

@@ -1,0 +1,17 @@
+//------------------------------------------------
+//   Op: 0x03 (ServerRedirect)
+//   Dir: Server -> Client
+//   Send: LoginServer/Send.cs - ServerSelectRedirect()
+//         LobbyServer/Send.cs - WorldRedirect()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+
+ubyte ip[4] <comment="IP bytes (network order)">;
+ushort port;
+ubyte flag1 <comment="Usually 2">;
+uint seed <format=hex, comment="Encryption seed for next connection">;
+TwString username;
+ubyte unknownFlag;
+ubyte flag2;

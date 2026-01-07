@@ -1,0 +1,23 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: MapBin.bt
+//   Authors: Kakia
+//   Purpose: TalesWeaver map.bin file format
+//------------------------------------------------
+
+BigEndian();
+
+typedef struct {
+    uchar PacketType;       // Should be 0x15
+    ushort MapId;           // Big Endian
+    ushort ZoneId;          // Big Endian
+    ushort MapType;         // Big Endian
+    uchar Attributes;
+
+    // Remaining data if any
+    if (!FEof())
+        uchar RemainingData[FileSize() - FTell()];
+} MAP_HEADER;
+
+MAP_HEADER header;

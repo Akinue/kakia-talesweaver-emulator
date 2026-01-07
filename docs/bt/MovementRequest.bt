@@ -1,0 +1,25 @@
+//------------------------------------------------
+//   Op: 0x33 (MovementRequest)
+//   Dir: Client -> Server
+//   Handler: WorldServer/PacketHandler.cs - MovementRequest()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+
+MovementFlag flag;
+
+switch (flag) {
+    case InitialRequest:
+        MovementType type;
+        Position pos;
+        if (FTell() < FileSize())
+            ubyte direction;
+        break;
+    case CurrentLocation:
+        Position pos;
+        break;
+    case MovementStop:
+        // No additional data
+        break;
+}

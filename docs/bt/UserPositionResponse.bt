@@ -1,0 +1,16 @@
+//------------------------------------------------
+//   Op: 0x0B (UserPositionResponse / MoveObject)
+//   Dir: Server -> Client
+//   Send: WorldServer/Send.cs - MoveObject()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+
+byte subOp <comment="Usually 0x00">;
+uint objectId;
+MovementType moveType;
+byte speed <comment="Movement speed">;
+Position prevPos <comment="Previous position">;
+Position newPos <comment="New position">;
+byte direction;

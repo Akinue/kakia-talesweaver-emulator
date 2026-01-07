@@ -1,0 +1,10 @@
+//------------------------------------------------
+//   Op: 0x28 (CheckNameRequest)
+//   Dir: Client -> Server
+//   Handler: LobbyServer/PacketHandler.cs - CheckNameRequest()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+
+TwString nameToCheck;

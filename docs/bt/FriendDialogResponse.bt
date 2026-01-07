@@ -1,0 +1,49 @@
+//------------------------------------------------
+//   Op: 0x44 (FriendDialogResponse)
+//   Dir: Server -> Client
+//   Send: WorldServer/Send.cs - NpcDialog(), NpcMenu(), NpcDialogClose()
+//   Note: Used for NPC dialogs despite the name
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+
+FriendDialogActionType actionType;
+
+switch (actionType) {
+    case NpcDialogText:
+        // 0x05 - Text dialog with portrait
+        ubyte subType <comment="0x01 = close, 0x02 = text with portrait">;
+        if (subType == 0x02) {
+            uint npcId;
+            uint modelId;
+            TwString text;
+            ubyte hasNext <comment="1 = show Next button">;
+        }
+        break;
+
+    case NpcDialogMenu:
+        // 0x04 - Dialog with menu options
+        ubyte subType <comment="0x02 = menu with portrait">;
+        if (subType == 0x02) {
+            uint64 dialogId <comment="Dialog ID (Big Endian)">;
+            uint modelId;
+            TwString message;
+            ubyte optionCount;
+            if (optionCount > 0) {
+                local int i;
+                for (i = 0; i < optionCount; i++) {
+                    TwString option;
+                }
+            }
+        }
+        break;
+
+    case EventScriptBroadcast:
+        // Script/Event broadcast
+        break;
+
+    default:
+        Printf("Unknown FriendDialogActionType: %02X\n", actionType);
+        break;
+}

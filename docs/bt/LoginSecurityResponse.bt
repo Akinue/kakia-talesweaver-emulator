@@ -1,0 +1,15 @@
+//------------------------------------------------
+//   Op: 0x3C (LoginSecurityResponse)
+//   Dir: Server -> Client
+//   Send: LobbyServer/Send.cs - LoginSecurity()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+
+CharLoginSecurityType type;
+
+// type == RequestSecurityCode (0x03): Client shows security code input
+// type == SetupSecurityCode (0x02): Client shows security code setup
+// type == CodeUpdated (0x00): Confirmation of code update
+// type == SecurityNone (0x01): No security code required

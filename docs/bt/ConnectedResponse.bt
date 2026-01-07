@@ -1,0 +1,10 @@
+//------------------------------------------------
+//   Op: 0x7E (ConnectedResponse)
+//   Dir: Server -> Client
+//   Send: WorldServer/Send.cs - Connected()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+
+ubyte flag <comment="Usually 0x01">;

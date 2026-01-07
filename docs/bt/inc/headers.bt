@@ -1,0 +1,25 @@
+//------------------------------------------------
+//      File: inc/headers.bt
+//   Purpose: Auto-detecting Packet Header
+//------------------------------------------------
+
+typedef struct {
+    // 1. Peek at the first byte to detect direction/framing
+    local int64 _pos = FTell();
+    ubyte _peek <hidden=true>;
+    FSeek(_pos); // Return to start
+
+    // 2. Conditional Read
+    if (_peek == 0xAA) {
+        // --- Server to Client (Framed) ---
+        ubyte frameHead <format=hex, bgcolor=cLtRed, comment="Signature (AA)">;
+        ubyte frameSeq  <format=hex, bgcolor=cLtRed, comment="Sequence">;
+        ubyte frameUnk  <format=hex, bgcolor=cLtRed>;
+    } 
+    
+    // --- Common Packet Header ---
+    // Note: If Client-to-Server, we start reading right here.
+    //ushort size <bgcolor=cLtGreen, comment="Total packet size (including this short)">;
+    ubyte op    <format=hex, bgcolor=cYellow, comment="Op Enum">;
+
+} TwHeader <optimize=false>;

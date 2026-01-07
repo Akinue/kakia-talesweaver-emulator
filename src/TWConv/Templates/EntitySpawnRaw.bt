@@ -1,0 +1,104 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: EntitySpawnRaw.bt
+//   Authors: Kakia
+//   Purpose: Raw view of TalesWeaver EntitySpawn .bin files
+//            Shows all bytes with multiple interpretations
+//------------------------------------------------
+
+// Show raw bytes with both LE and BE interpretations
+
+typedef struct {
+    uchar Byte0_Opcode;
+    uchar Byte1_Flag;
+    uchar Byte2_SpawnType;
+
+    // Bytes 3-6: ObjectId (4 bytes)
+    LittleEndian();
+    uint Bytes3_6_ObjectId_LE <format=hex>;
+    FSeek(3);
+    BigEndian();
+    uint Bytes3_6_ObjectId_BE <format=hex>;
+    FSeek(7);
+
+    // Bytes 7-8
+    LittleEndian();
+    ushort Bytes7_8_LE;
+    FSeek(7);
+    BigEndian();
+    ushort Bytes7_8_BE;
+    FSeek(9);
+
+    // Bytes 9-10
+    LittleEndian();
+    ushort Bytes9_10_LE;
+    FSeek(9);
+    BigEndian();
+    ushort Bytes9_10_BE;
+    FSeek(11);
+
+    // Bytes 11-12
+    LittleEndian();
+    ushort Bytes11_12_LE;
+    FSeek(11);
+    BigEndian();
+    ushort Bytes11_12_BE;
+    FSeek(13);
+
+    // Bytes 13-14
+    LittleEndian();
+    ushort Bytes13_14_LE;
+    FSeek(13);
+    BigEndian();
+    ushort Bytes13_14_BE;
+    FSeek(15);
+
+    // Bytes 15-16
+    if (FileSize() > 15) {
+        LittleEndian();
+        ushort Bytes15_16_LE;
+        FSeek(15);
+        BigEndian();
+        ushort Bytes15_16_BE;
+        FSeek(17);
+    }
+
+    // Bytes 17-18
+    if (FileSize() > 17) {
+        LittleEndian();
+        ushort Bytes17_18_LE;
+        FSeek(17);
+        BigEndian();
+        ushort Bytes17_18_BE;
+        FSeek(19);
+    }
+
+    // Bytes 19-20
+    if (FileSize() > 19) {
+        LittleEndian();
+        ushort Bytes19_20_LE;
+        FSeek(19);
+        BigEndian();
+        ushort Bytes19_20_BE;
+    }
+} RAW_VIEW;
+
+// Also show pure hex dump
+FSeek(0);
+Printf("=== Raw Hex Dump ===\n");
+local int i;
+local int fileLen = FileSize();
+Printf("File size: %d bytes\n", fileLen);
+Printf("Offset: ");
+for (i = 0; i < fileLen && i < 32; i++) {
+    Printf("%02d ", i);
+}
+Printf("\nHex:    ");
+for (i = 0; i < fileLen && i < 32; i++) {
+    Printf("%02X ", ReadUByte(i));
+}
+Printf("\n\n");
+
+FSeek(0);
+RAW_VIEW rawView;

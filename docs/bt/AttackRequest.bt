@@ -1,0 +1,11 @@
+//------------------------------------------------
+//   Op: 0x13 (AttackRequest)
+//   Dir: Client -> Server
+//   Handler: WorldServer/PacketHandler.cs - Attack()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+
+// Attack request data
+// Structure depends on attack type (basic, skill, etc.)

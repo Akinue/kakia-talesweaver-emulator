@@ -1,0 +1,73 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: WarpPortal.bt
+//   Authors: Kakia
+//   Purpose: TalesWeaver WarpPortal (Type 4) .bin files
+//
+//   NOTE: The original code (WarpPortal.FromBytes) reads
+//   these as Big Endian, but the file appears to store
+//   them as Little Endian based on filenames.
+//------------------------------------------------
+
+// WarpPortal binary format from WarpPortal.cs:
+// Skip 3 bytes, then:
+// - Id: ReadUInt32BE()
+// - MinPoint.X: ReadUInt16BE()
+// - MinPoint.Y: ReadUInt16BE()
+// - MaxPoint.X: ReadUInt16BE()
+// - MaxPoint.Y: ReadUInt16BE()
+
+typedef struct {
+    uchar Opcode;       // 0x07
+    uchar Flag;         // 0x00
+    uchar Type;         // 0x04 (portal)
+} HEADER;
+
+// Show both interpretations
+typedef struct {
+    // Little Endian interpretation (matches filename)
+    LittleEndian();
+    uint ObjectId_LE <format=decimal, comment="LE: matches filename">;
+
+    // Seek back and show Big Endian too
+    FSeek(FTell() - 4);
+    BigEndian();
+    uint ObjectId_BE <format=decimal, comment="BE: what WarpPortal.cs reads">;
+    FSeek(FTell() + 4);
+} OBJECT_ID;
+
+typedef struct {
+    BigEndian();
+    ushort MinX;
+    ushort MinY;
+    ushort MaxX;
+    ushort MaxY;
+
+    // Also show LE interpretation
+    FSeek(FTell() - 8);
+    LittleEndian();
+    ushort MinX_LE <hidden=true>;
+    ushort MinY_LE <hidden=true>;
+    ushort MaxX_LE <hidden=true>;
+    ushort MaxY_LE <hidden=true>;
+} PORTAL_BOUNDS;
+
+HEADER header;
+OBJECT_ID objectId;
+PORTAL_BOUNDS bounds;
+
+if (!FEof()) {
+    uchar Remaining[FileSize() - FTell()];
+}
+
+// Output info
+Printf("=== Portal Analysis ===\n");
+Printf("ObjectId (LE, matches filename): %u\n", objectId.ObjectId_LE);
+Printf("ObjectId (BE, WarpPortal.cs reads): %u\n", objectId.ObjectId_BE);
+Printf("\nBounds (as BE):\n");
+Printf("  Min: (%u, %u)\n", bounds.MinX, bounds.MinY);
+Printf("  Max: (%u, %u)\n", bounds.MaxX, bounds.MaxY);
+Printf("\nBounds (as LE):\n");
+Printf("  Min: (%u, %u)\n", bounds.MinX_LE, bounds.MinY_LE);
+Printf("  Max: (%u, %u)\n", bounds.MaxX_LE, bounds.MaxY_LE);

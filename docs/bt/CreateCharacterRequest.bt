@@ -1,0 +1,12 @@
+//------------------------------------------------
+//   Op: 0x2C (CreateCharacterRequest)
+//   Dir: Client -> Server
+//   Handler: LobbyServer/PacketHandler.cs - CreateCharacterRequest()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+
+uint modelId <comment="Character model/class ID">;
+TwString characterName;
+// Note: Appearance is typically default; client doesn't send appearance block

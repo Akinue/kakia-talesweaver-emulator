@@ -1,0 +1,10 @@
+//------------------------------------------------
+//   Op: 0x2B (SelectCharacterRequest)
+//   Dir: Client -> Server
+//   Handler: LobbyServer/PacketHandler.cs - SelectCharacterRequest()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+
+TwString characterName;

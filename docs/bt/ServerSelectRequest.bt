@@ -1,0 +1,12 @@
+//------------------------------------------------
+//   Op: 0x67 (ServerSelectRequest)
+//   Dir: Client -> Server
+//   Handler: LoginServer/PacketHandler.cs - ServerSelect()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+
+ubyte serverId;
+ubyte channelId;
+TwString username;

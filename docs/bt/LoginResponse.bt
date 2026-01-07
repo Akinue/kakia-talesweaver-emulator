@@ -1,0 +1,22 @@
+//------------------------------------------------
+//   Op: 0x50 (LoginResponse)
+//   Dir: Server -> Client (Login Phase)
+//   Send: LoginServer/Send.cs - LoginSuccess()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+
+ubyte headerByte <comment="Always 0x01">;
+ubyte accountCount <comment="Number of account entries">;
+
+struct AccountInfo {
+    ubyte serverId;
+    TwString username;
+    int unknown;
+    int createdAt <comment="Account creation timestamp (Unix)">;
+    int lastLogin <comment="Last login timestamp (Unix)">;
+    ubyte charCount <comment="Number of characters">;
+};
+
+AccountInfo accounts[accountCount] <optimize=false>;

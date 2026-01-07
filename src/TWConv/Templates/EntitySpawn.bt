@@ -1,0 +1,83 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: EntitySpawn.bt
+//   Authors: Kakia
+//   Purpose: TalesWeaver EntitySpawnPacket .bin files
+//            Used for Spawn/*.bin files in zone folders
+//------------------------------------------------
+
+LittleEndian();
+
+typedef struct {
+    uchar Code;           // Should be 0x07
+    uchar Flag;
+    uchar SpawnType;        // 0=Monster, 1=ExtendedNPC, 2=MonsterNpc, 4=Portal
+} PACKET_HEADER;
+
+// Monster spawn (Type 0x00)
+typedef struct {
+    uint ObjectId;          // Little Endian
+    ushort PosX;            // Little Endian
+    ushort PosY;            // Little Endian
+    uchar Direction;
+    if (!FEof())
+        uchar RemainingData[FileSize() - FTell()];
+} MONSTER_SPAWN;
+
+// Extended NPC (Type 0x01) - Used for global NPCs
+typedef struct {
+    uint ObjectId;          // Little Endian (bytes 3-6)
+    uchar Padding[5];       // 5 bytes padding (bytes 7-11)
+    ushort ModelId;         // Little Endian (bytes 12-13)
+    ushort SpriteId;        // Little Endian (bytes 14-15)
+    ushort PosX;            // Little Endian (bytes 16-17)
+    ushort PosY;            // Little Endian (bytes 18-19)
+    uchar Direction;        // (byte 20)
+    if (!FEof())
+        uchar RemainingData[FileSize() - FTell()];
+} EXTENDED_NPC;
+
+// Zone NPC (Type 0x02)
+typedef struct {
+    uint ObjectId;          // Little Endian (bytes 3-6)
+    uchar Padding[12];      // 12 bytes padding (bytes 7-18)
+    ushort PosX;            // Little Endian (bytes 19-20)
+    ushort PosY;            // Little Endian (bytes 21-22)
+    uchar Direction;        // (byte 23)
+    if (!FEof())
+        uchar RemainingData[FileSize() - FTell()];
+} ZONE_NPC;
+
+// Portal (Type 0x04)
+typedef struct {
+    uint ObjectId <format=hex>;  // Little Endian
+    ushort PosX;            // Little Endian
+    ushort PosY;            // Little Endian
+    ushort DestMapId;       // Little Endian
+    ushort DestPortalId;    // Little Endian
+    if (!FEof())
+        uchar RemainingData[FileSize() - FTell()];
+} PORTAL;
+
+// Parse the file
+PACKET_HEADER header;
+
+switch (header.SpawnType) {
+    case 0x00:
+        MONSTER_SPAWN monster;
+        break;
+    case 0x01:
+        EXTENDED_NPC extendedNpc;
+        break;
+    case 0x02:
+        ZONE_NPC zoneNpc;
+        break;
+    case 0x04:
+        PORTAL portal;
+        break;
+    default:
+        if (!FEof())
+            uchar UnknownData[FileSize() - FTell()];
+        break;
+}

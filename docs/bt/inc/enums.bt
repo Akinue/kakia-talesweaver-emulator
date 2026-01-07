@@ -1,0 +1,141 @@
+//------------------------------------------------
+//      File: inc/enums.bt
+//   Purpose: Operation Codes & Enumerations
+//   Matches: src/Shared/Network/Op.cs
+//------------------------------------------------
+
+// ================================================================
+// Packet Operation Codes
+// ================================================================
+// Naming convention:
+// - Client -> Server: PascalCase + "Request" suffix
+// - Server -> Client: PascalCase + "Response" suffix
+// - Acknowledgments: PascalCase + "Ack" suffix
+// - Bidirectional/Special: PascalCase (no suffix)
+// ================================================================
+
+enum <ubyte> Op {
+    // Bidirectional / Special packets (no suffix)
+    Handshake               = 0x00,
+    Acknowledge             = 0x02,
+    Heartbeat               = 0x24,
+
+    // Client -> Server requests
+    ChatRequest             = 0x0E,
+    InitConnectRequest      = 0x0F,
+    ReconnectRequest        = 0x10,
+    DirectionUpdateRequest  = 0x11,
+    AttackRequest           = 0x13,
+    TriggerRequest          = 0x1B,
+    CheckNameRequest        = 0x28,
+    CharacterInfoUpdateRequest = 0x2A,
+    SelectCharacterRequest  = 0x2B,
+    CreateCharacterRequest  = 0x2C,
+    SetPoseRequest          = 0x32,
+    MovementRequest         = 0x33,
+    UiActionRequest         = 0x37,
+    EntityClickRequest      = 0x43,
+    LoginRequest            = 0x66,
+    ServerSelectRequest     = 0x67,
+    NpcDialogAnswerRequest  = 0x6C,
+    DebugSourceLineRequest  = 0x7C, // Note: Same as CreateCharacterResponse (direction differs)
+
+    // Server -> Client responses
+    ServerRedirect          = 0x03,
+    WorldResponse           = 0x07,
+    UserPositionResponse    = 0x0B,
+    ChatResponse            = 0x0D,
+    MapChangeResponse       = 0x15,
+    DialogResponse          = 0x17,
+    MetaFilesResponse       = 0x18,
+    LoginSecurityResponse   = 0x3C,
+    FriendDialogResponse    = 0x44,
+    AttackResultResponse    = 0x48,
+    LoginResponse           = 0x50,
+    ServerListResponse      = 0x56,
+    CharEffectResponse      = 0x5C,
+    CharacterSelectListResponse = 0x6B,
+    CreateCharacterResponse = 0x7C, // Note: Same as DebugSourceLineRequest (direction differs)
+    ConnectedResponse       = 0x7E,
+
+    // Server -> Client acknowledgments
+    HandshakeAck            = 0x68,
+    AttackAck               = 0x4A,
+    EntityClickAck          = 0x70,
+};
+
+// ================================================================
+// Sub-Identifiers (Packet Logic Enums)
+// ================================================================
+
+// WorldResponse (0x07) sub-actions
+enum <ubyte> WorldPacketId {
+    Object          = 0x00,
+    RemoveObject    = 0x01,
+    ObjectDie       = 0x02
+};
+
+// Entity spawn types for WorldResponse
+enum <ubyte> SpawnType {
+    SpawnUnknown    = 0x00,
+    Player          = 0x01,
+    MonsterNpc      = 0x02,
+    Item            = 0x03,
+    Portal          = 0x04,
+    Reactor         = 0x05,
+    Pet             = 0x06,
+    MonsterNpc2     = 0x07,
+    SummonedCreature= 0x08,
+    MonsterNpc3     = 0x09,
+};
+
+// MovementRequest (0x33) flags
+enum <byte> MovementFlag {
+    InitialRequest  = 0x00,
+    MovementStop    = 0x01,
+    CurrentLocation = 0x02
+};
+
+// Movement type (walk/run)
+enum <byte> MovementType {
+    Walk = 0x00,
+    Run  = 0x01,
+};
+
+// Character login security types
+enum <byte> CharLoginSecurityType {
+    CodeUpdated         = 0x00,
+    SecurityNone        = 0x01,
+    SetupSecurityCode   = 0x02,
+    RequestSecurityCode = 0x03
+};
+
+// Client response codes for SecurityCodeRequest
+enum <byte> ClientResponseCode {
+    ResponseUnknown = 0x00,
+    WithMessage     = 0x01,
+    LoadingDone     = 0x05
+};
+
+// FriendDialogResponse (0x44) sub-actions
+enum <byte> FriendDialogActionType {
+    FriendMemoAction1       = 0x00,
+    FriendMemoAction2       = 0x01,
+    EventScriptBroadcast    = 0x02,
+    NpcDialogMenu           = 0x04,
+    NpcDialogText           = 0x05,
+    DialogResponseAction    = 0x06,
+    BossBattleResult        = 0x07,
+};
+
+// Pose types
+enum <byte> PoseType {
+    Stand = 0x00,
+    Sit   = 0x01
+};
+
+// Character effect types
+enum <byte> CharEffectType {
+    LevelUp     = 0x01,
+    MaxLevel    = 0x02
+};

@@ -1,0 +1,27 @@
+//------------------------------------------------
+//   Op: 0x6B (CharacterSelectListResponse)
+//   Dir: Server -> Client
+//   Send: LobbyServer/Send.cs - CharacterSelectList()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+
+ubyte hasCharacters <comment="1 = has characters, 0 = empty">;
+ubyte characterCount;
+ubyte characterIndex <comment="Current index, usually 1">;
+
+if (characterCount == 0) {
+    ushort zero <comment="Padding when no characters">;
+}
+else {
+    // Character entries with separators
+    local int i;
+    for (i = 0; i < characterCount; i++) {
+        CharacterEntry character;
+
+        if (i < characterCount - 1) {
+            ubyte separator <comment="Entry separator">;
+        }
+    }
+}

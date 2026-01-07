@@ -1,0 +1,11 @@
+//------------------------------------------------
+//   Op: 0x5C (CharEffectResponse)
+//   Dir: Server -> Client
+//   Send: WorldServer/Send.cs - CharEffect()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+
+uint characterId;
+CharEffectType effectType <comment="0x01 = LevelUp, 0x02 = MaxLevel">;

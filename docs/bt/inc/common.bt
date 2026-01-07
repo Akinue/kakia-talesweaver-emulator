@@ -1,0 +1,17 @@
+//------------------------------------------------
+//      File: inc/common.bt
+//   Purpose: Main Include
+//------------------------------------------------
+
+// TalesWeaver uses Big Endian byte ordering
+BigEndian();
+
+#include "inc/LpString.bt"
+#include "inc/enums.bt"
+#include "inc/structs.bt"
+#include "inc/headers.bt"
+
+// Helper to calculate remaining size
+int GetRemainingSize(TwHeader &h) {
+    return h.size - (FTell() - startof(h));
+}

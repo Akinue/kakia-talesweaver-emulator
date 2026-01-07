@@ -1,0 +1,15 @@
+//------------------------------------------------
+//   Op: 0x10 (ReconnectRequest)
+//   Dir: Client -> Server
+//   Handler: LobbyServer/PacketHandler.cs - ClientReconnectRequest()
+//            WorldServer/PacketHandler.cs - ClientReconnectRequest()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+
+uint seed <format=hex, comment="Encryption seed from redirect">;
+TwString hwid <comment="Hardware ID">;
+TwString id <comment="Client ID">;
+TwString nexonId <comment="Nexon ID (legacy)">;
+TwString username;

@@ -1,0 +1,71 @@
+//------------------------------------------------
+//   Op: 0x07 (WorldResponse)
+//   Dir: Server -> Client
+//   Send: WorldServer/Send.cs - EntitySpawnNpc(), EntitySpawnItem(), EntityDespawn()
+//         WorldServer/Managers/Map.cs
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+
+WorldPacketId action;
+SpawnType type;
+
+if (action == Object) {
+    switch (type) {
+        case Item:
+            int itemId;
+            short amount;
+            short durability;
+            // Note: Equipment items have additional data (refine, flags, stats)
+            int ownerId <comment="0 = anyone can pick up">;
+            Position pos;
+            short droppedAmount;
+            break;
+
+        case MonsterNpc:
+        case MonsterNpc2:
+        case MonsterNpc3:
+            uint objectId;
+            uint modelId <comment="NPC/Monster model ID">;
+            uint unkV3;
+            uint unkV30;
+            Position pos;
+            ubyte direction;
+            break;
+
+        case Portal:
+            uint portalId;
+            Position pos;
+            ushort destMapId;
+            ushort destPortalId <comment="Visual portal ID">;
+            break;
+
+        case Player:
+            // Player spawns use a different packet (0x33 subOp 0x00)
+            uint objectId;
+            uint unk1;
+            byte b1;
+            uint modelId;
+            Position pos;
+            ubyte direction;
+            ubyte b2;
+            int64 l1;
+            ubyte remaining[39];
+            byte b3; // 0, 2, 1
+            byte b4; // 0, 0x20 (32), 0
+            byte b5; // 0
+            break;
+
+        default:
+            Printf("Unknown SpawnType: %02X\n", type);
+            break;
+    }
+}
+else if (action == RemoveObject) {
+    uint objectId;
+}
+else if (action == ObjectDie) {
+    uint objectId;
+    // Death animation data may follow
+}

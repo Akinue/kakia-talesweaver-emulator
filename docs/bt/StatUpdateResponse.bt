@@ -1,0 +1,131 @@
+//------------------------------------------------
+//   Op: 0x08 (StatUpdateResponse)
+//   Dir: Server -> Client
+//   Send: WorldServer/Send.cs - StatUpdateFull()
+//   Total Size: 357 bytes (with opcode)
+//   Payload Size: 356 bytes (without opcode)
+//------------------------------------------------
+
+#include "inc/common.bt"
+
+TwHeader header;
+
+// === HEADER ===
+//ubyte opCode <format=hex, bgcolor=cYellow, comment="0x08 = StatUpdate">;
+ubyte subType <comment="Usually 0x00">;
+ubyte flags <comment="Usually 0x00">;
+ubyte unk1 <format=hex, comment="0xFD">;
+ubyte unk2 <format=hex, comment="0xFF">;
+
+// === CHARACTER ID (offset 6 in file, 5 in payload) ===
+uint charId <bgcolor=cLtBlue, comment="Character ID (BE)">;
+
+// === UNKNOWN PADDING ===
+ubyte padding1[6] <bgcolor=cLtGray>;
+
+// === LEVEL INFO (offset 16-19 in file) ===
+ubyte levelFlag1 <comment="Usually 0x01">;
+ubyte levelFlag2 <comment="Usually 0x00">;
+ubyte level <bgcolor=cLtGreen, comment="Character Level">;
+ubyte levelSub <comment="Sub-level or class?">;
+
+ushort s1;
+
+// === HP VALUES (offset 28-43 in file, 8 bytes each BE uint64) ===
+// Note: In original packet these show values like 0x127 (295)
+uint64 currentHpBlock <bgcolor=cRed, comment="Current HP (BE uint64)">;
+uint64 maxHpBlock <bgcolor=cRed, comment="Max HP (BE uint64)">;
+
+// === MP VALUES (offset 44-59) ===
+uint64 currentMpBlock <bgcolor=cBlue, comment="Current MP">;
+uint64 maxMpBlock <bgcolor=cBlue, comment="Max MP">;
+
+// === SP VALUES (offset 60-75) ===
+uint64 currentSpBlock <bgcolor=cPurple, comment="Current SP">;
+uint64 maxSpBlock <bgcolor=cPurple, comment="Max SP">;
+
+// === UNKNOWN BLOCK 1 ===
+ubyte unknownBlock1[32] <bgcolor=cLtGray, comment="Unknown padding">;
+
+ushort level2;
+ushort level3;
+
+// === EXPERIENCE ===
+// Note: Appears to be zeros in template, exp might be elsewhere
+uint64 currentExp <bgcolor=cLtGray, comment="Experience block">;
+uint64 nextLevelExp <bgcolor=cLtGray, comment="Experience block">;
+uint64 limitExp <bgcolor=cLtGray, comment="Experience block">;
+
+ushort s2;
+
+uint64 l1; // 10000
+
+uint64 currentHpBlock2 <bgcolor=cRed, comment="Current HP (BE uint64)">;
+byte b1;
+uint64 currentMpBlock2 <bgcolor=cBlue, comment="Current MP">;
+uint64 currentSpBlock2 <bgcolor=cPurple, comment="Current SP">;
+uint64 currentExpBlock2 <bgcolor=cLtGray, comment="Experience block">;
+
+// === UNKNOWN BLOCK 2 ===
+ubyte unknownBlock2[16] <bgcolor=cLtGray, comment="Unknown padding">;
+
+// === Total STATS (From base + equipment) ===
+struct {
+    ushort stab <bgcolor=cAqua, comment="STAB bonus">;
+    ushort hack <bgcolor=cAqua, comment="HACK bonus">;
+    ushort intl <bgcolor=cAqua, comment="INT bonus">;
+    ushort def <bgcolor=cAqua, comment="DEF bonus">;
+    ushort mr <bgcolor=cAqua, comment="MR bonus">;
+    ushort dex <bgcolor=cAqua, comment="DEX bonus">;
+    ushort agi <bgcolor=cAqua, comment="AGI bonus">;
+} bonusStats <comment="Equipment bonus stats (offset 202)">;
+
+// === PRIMARY STATS (Base values) ===
+struct {
+    ushort stab <bgcolor=cGreen, comment="STAB base">;
+    ushort hack <bgcolor=cGreen, comment="HACK base">;
+    ushort intl <bgcolor=cGreen, comment="INT base">;
+    ushort def <bgcolor=cGreen, comment="DEF base">;
+    ushort mr <bgcolor=cGreen, comment="MR base">;
+    ushort dex <bgcolor=cGreen, comment="DEX base">;
+    ushort agi <bgcolor=cGreen, comment="AGI base">;
+} baseStats <comment="Base character stats (offset 188)">;
+
+// === STAT POINTS ===
+// Offset 216 in file (215 in payload)
+ushort statPoints <bgcolor=cYellow, comment="Available stat points (offset 216)">;
+
+ubyte unknownBlock3[18];
+
+// === Equipment Bonus ===
+struct {
+    ushort stab <bgcolor=cAqua, comment="STAB bonus">;
+    ushort hack <bgcolor=cAqua, comment="HACK bonus">;
+    ushort def <bgcolor=cAqua, comment="DEF bonus">;
+    ushort intl <bgcolor=cAqua, comment="INT bonus">;
+    ushort mr <bgcolor=cAqua, comment="MR bonus">;
+    ushort dex <bgcolor=cAqua, comment="DEX bonus">;
+    ushort agi <bgcolor=cAqua, comment="AGI bonus">;
+    ushort agiEvasion <bgcolor=cAqua, comment="AGI Evasion bonus">;
+} equipStats <comment="Equipment bonus stats (offset 202)">;
+
+ubyte unknownBlock4[3];
+
+// === REMAINING DATA ===
+local int remaining = FileSize() - FTell();
+if (remaining > 0) {
+    ubyte footer[remaining] <bgcolor=cLtGray, comment="Footer data">;
+}
+
+// === HELPER INFO ===
+Printf("=== StatUpdate Packet Analysis ===\n");
+Printf("File Size: %d bytes\n", FileSize());
+Printf("Character ID: 0x%08X (%u)\n", charId, charId);
+Printf("Level: %d\n", level);
+Printf("\nBase Stats (offset 188):\n");
+Printf("  STAB: %d, HACK: %d, INT: %d, DEF: %d\n", baseStats.stab, baseStats.hack, baseStats.intl, baseStats.def);
+Printf("  MR: %d, DEX: %d, AGI: %d\n", baseStats.mr, baseStats.dex, baseStats.agi);
+Printf("\nBonus Stats (offset 202):\n");
+Printf("  STAB: %d, HACK: %d, INT: %d, DEF: %d\n", bonusStats.stab, bonusStats.hack, bonusStats.intl, bonusStats.def);
+Printf("  MR: %d, DEX: %d, AGI: %d\n", bonusStats.mr, bonusStats.dex, bonusStats.agi);
+Printf("\nStat Points (offset 216): %d\n", statPoints);

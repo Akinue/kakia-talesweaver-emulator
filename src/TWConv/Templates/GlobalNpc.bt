@@ -1,0 +1,38 @@
+//------------------------------------------------
+//--- 010 Editor v14.0 Binary Template
+//
+//      File: GlobalNpc.bt
+//   Authors: Kakia
+//   Purpose: TalesWeaver Global NPC .bin files
+//            Used for NPCs/*.bin files
+//------------------------------------------------
+
+LittleEndian();
+
+typedef struct {
+    uchar Opcode;           // Should be 0x07
+    uchar Flag;             // Usually 0x00
+    uchar SpawnType;        // Should be 0x01 for extended NPC
+} PACKET_HEADER;
+
+typedef struct {
+    uint ObjectId;          // Little Endian (bytes 3-6)
+    uchar Padding[5];       // 5 bytes padding (bytes 7-11)
+    ushort ModelId;         // Little Endian (bytes 12-13)
+    ushort SpriteId;        // Little Endian (bytes 14-15)
+    ushort PosX;            // Little Endian (bytes 16-17)
+    ushort PosY;            // Little Endian (bytes 18-19)
+    uchar Direction;        // (byte 20)
+    if (!FEof())
+        uchar ExtraData[FileSize() - FTell()];
+} NPC_DATA;
+
+PACKET_HEADER header;
+NPC_DATA npcData;
+
+// Display info
+Printf("NPC ObjectId: %u (0x%08X)\n", npcData.ObjectId, npcData.ObjectId);
+Printf("ModelId: %u (0x%04X)\n", npcData.ModelId, npcData.ModelId);
+Printf("SpriteId: %u (0x%04X)\n", npcData.SpriteId, npcData.SpriteId);
+Printf("Position: (%u, %u)\n", npcData.PosX, npcData.PosY);
+Printf("Direction: %u\n", npcData.Direction);

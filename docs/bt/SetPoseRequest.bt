@@ -1,0 +1,10 @@
+//------------------------------------------------
+//   Op: 0x32 (SetPoseRequest)
+//   Dir: Client -> Server
+//   Handler: WorldServer/PacketHandler.cs - SetPose()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+
+PoseType pose <comment="0 = stand, 1 = sit">;

@@ -1,0 +1,109 @@
+//------------------------------------------------
+//      File: inc/structs.bt
+//   Purpose: Common Data Structures
+//   Matches: src/Shared/Network structures
+//------------------------------------------------
+
+// ================================================================
+// String Types
+// ================================================================
+
+// Standard Length-Prefixed String (Byte length, no null terminator)
+// Used in: packet.GetString(packet.GetByte())
+typedef struct {
+    ubyte len;
+    if (len > 0) char str[len];
+} TwString <read=TwStringRead, optimize=false>;
+
+string TwStringRead(TwString &s) {
+    if (s.len == 0) return "";
+    return s.str;
+}
+
+// ================================================================
+// Position / Coordinate Types
+// ================================================================
+
+// 2D Position (commonly used in TW)
+typedef struct {
+    ushort x;
+    ushort y;
+} Position <read=Str("(%d, %d)", x, y)>;
+
+// Full map position with MapId and ZoneId
+typedef struct {
+    ushort mapId;
+    ushort zoneId;
+    ushort x;
+    ushort y;
+} MapPosition <read=Str("Map %d-%d (%d, %d)", mapId, zoneId, x, y)>;
+
+// ================================================================
+// Item Structures
+// ================================================================
+
+typedef struct {
+    ushort type;
+    int value;
+} ItemStat;
+
+// Basic item structure for drops
+typedef struct {
+    int itemId;
+    short amount;
+    short durability;
+} GameItem;
+
+// ================================================================
+// Character Appearance
+// ================================================================
+
+// Placeholder for Look/Appearance structure (Send.SpawnUser)
+typedef struct {
+    short face;
+    short hair;
+    short hairColor;
+    short skinColor;
+    // Additional bytes may follow per client version
+} CharacterAppearance;
+
+// ================================================================
+// Server Info (for ServerListResponse)
+// ================================================================
+
+typedef struct {
+    ubyte id;
+    uint ip <format=hex, comment="IPv4 as uint">;
+    ushort port;
+    TwString name;
+    ushort load <comment="Server load percentage">;
+} ServerInfo <optimize=false, read=Str("%s (%d)", name.str, id)>;
+
+// ================================================================
+// Character Summary (for CharacterSelectListResponse)
+// ================================================================
+
+typedef struct {
+    uint lastLoginTime;
+    uint creationTime;
+    uint unknown0;
+    ubyte unknownFlag;
+    uint modelId;
+
+    // Gear block size varies:
+    // Full: 0x1C0 (448 bytes) - has equipment
+    // Empty: 0x38 (56 bytes) - no equipment
+    local int gearSize = (ReadUInt(FTell() + 0x1C0) != 0) ? 0x1C0 : 0x38;
+    ubyte gearBlock[gearSize] <comment="Equipment/Appearance data">;
+
+    uint characterId;
+    TwString name;
+} CharacterEntry <optimize=false, read=Str("%s (ID: %d)", name.str, characterId)>;
+
+// ================================================================
+// NPC Dialog Menu Option
+// ================================================================
+
+typedef struct {
+    TwString text;
+} DialogOption <optimize=false, read=TwStringRead(text)>;

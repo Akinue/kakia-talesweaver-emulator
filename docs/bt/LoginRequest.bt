@@ -1,0 +1,11 @@
+//------------------------------------------------
+//   Op: 0x66 (LoginRequest)
+//   Dir: Client -> Server
+//   Handler: LoginServer/PacketHandler.cs - Login()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+ubyte skip <comment="Usually 0x00">;
+TwString username;
+TwString password;

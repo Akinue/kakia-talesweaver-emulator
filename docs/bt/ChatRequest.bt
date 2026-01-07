@@ -1,0 +1,10 @@
+//------------------------------------------------
+//   Op: 0x0E (ChatRequest)
+//   Dir: Client -> Server
+//   Handler: WorldServer/PacketHandler.cs - Chat()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+ubyte subType <comment="Chat channel type">;
+TwString message;

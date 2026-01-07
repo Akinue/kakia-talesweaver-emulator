@@ -1,0 +1,10 @@
+//------------------------------------------------
+//   Op: 0x7C (CreateCharacterResponse)
+//   Dir: Server -> Client
+//   Send: LobbyServer/Send.cs - CharacterCreationSuccess()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+
+ubyte result <comment="0x01 = Success">;

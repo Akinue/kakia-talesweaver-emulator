@@ -1,0 +1,12 @@
+//------------------------------------------------
+//   Op: 0x56 (ServerListResponse)
+//   Dir: Server -> Client
+//   Send: LoginServer/Send.cs - ServerList()
+//------------------------------------------------
+#include "inc/common.bt"
+
+TwHeader header;
+ubyte serverCount;
+
+if (serverCount > 0)
+    ServerInfo servers[serverCount];

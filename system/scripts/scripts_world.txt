@@ -1,0 +1,24 @@
+// World Server Script List
+// =========================
+// This file lists all scripts to be loaded by the World Server.
+// Each line should contain a relative path to a script file.
+// Lines starting with // are comments.
+// Empty lines are ignored.
+
+// ---------------------------------------------------------
+// NPC Scripts
+// ---------------------------------------------------------
+
+//Npcs/**/*
+
+// ---------------------------------------------------------
+// Monster Spawn Scripts
+// ---------------------------------------------------------
+
+//Spawns/**/*
+
+// ---------------------------------------------------------
+// Warp Portal Scripts
+// ---------------------------------------------------------
+
+//Warps/**/*
