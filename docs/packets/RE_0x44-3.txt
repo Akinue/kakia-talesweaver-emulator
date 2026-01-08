@@ -1,0 +1,136 @@
+#include <cstdint>
+
+#pragma pack(push, 1) // Force 1-byte alignment
+
+struct SScriptEventPacket
+{
+    // Main Opcode: 0x44 (Fixed)
+    
+    // Sub-Opcode (The switch variable 'v88')
+    enum EActionType : uint8_t
+    {
+        ACTION_LOBBY_INIT    = 0, // Enter Room / Init Info
+        ACTION_LOBBY_CLEAR   = 1, // Clear Lobby Data
+        ACTION_BROADCAST     = 2, // System/Script Announcement
+        ACTION_COMMUNITY     = 4, // Messenger/Guild (Nested Packet)
+        ACTION_DIALOG_CMD    = 5, // Visual Novel / NPC Interaction
+        ACTION_RANKING       = 6, // Ranking Window Data
+        ACTION_BOS_RESULT    = 7, // Battle Result Screen
+    };
+
+    EActionType m_byAction;
+
+    // Mutually Exclusive Payloads
+    union
+    {
+        // --- ACTION 0: Lobby Initialization ---
+        struct
+        {
+            // [Variable String] Room Title (1 Byte Len + Char[])
+            // [Variable String] Room Password (1 Byte Len + Char[])
+            // The following fields appear *after* the strings in the stream:
+            int32_t m_iRoomID;      // Big Endian
+            int32_t m_iMapID;       // Big Endian
+            int32_t m_iGameMode;    // Big Endian
+            int32_t m_iMaxPlayers;  // Big Endian
+            int32_t m_iTimeLimit;   // Big Endian
+            // [Dynamic Block A] (1 Byte Count + 2 Byte Size + Data)
+            // [Dynamic Block B] (2 Byte Size + Data)
+        } LobbyInit;
+
+        // --- ACTION 2: Broadcast ---
+        struct
+        {
+            int32_t m_iPacketHeader; // Big Endian
+            int32_t m_iMessageID;    // Big Endian
+            int16_t m_wTextLength;   // Big Endian
+            // char m_szMessage[m_wTextLength];
+        } Broadcast;
+
+        // --- ACTION 5: Dialog & Script Commands ---
+        struct
+        {
+            enum ECommandType : uint8_t
+            {
+                CMD_UPDATE_STATE = 0,
+                CMD_CHECK_STATE  = 1,
+                CMD_NOVEL_TALK   = 2, // Portrait + Text
+                CMD_SYSTEM_MSG   = 3,
+                CMD_CHOICES      = 4, // NPC Question + Answers
+                CMD_WAIT         = 5,
+                CMD_EMOTICON     = 6,
+                CMD_NPC_TALK     = 7, // Standard Bubble
+            } m_byCommand;
+
+            union
+            {
+                struct { 
+                    int8_t m_val1; 
+                    int8_t m_val2; 
+                } UpdateState;
+
+                struct {
+                    int32_t m_iSpriteID;   // Big Endian
+                    int8_t  m_byPosition;
+                    int8_t  m_byAnimation;
+                    int8_t  m_byEffect;
+                    // [Variable String] Name (2 Byte Len + Char[])
+                } NovelTalk;
+
+                struct {
+                    // [Variable String] Message (2 Byte Len + Char[])
+                } SystemMsg;
+
+                struct {
+                    int32_t m_iDialogID;   // Big Endian
+                    int32_t m_iLinkID;     // Big Endian
+                    int8_t  m_byType;
+                    // [Variable String] Main Text (2 Byte Len + Char[])
+                    // int8_t m_byChoiceCount;
+                    // Loop: [LinkID (2B)] + [Text (2B Len + Char[])]
+                } Choices;
+
+                struct {
+                    int32_t m_iDurationMS; // Big Endian
+                    int32_t m_iType;       // Big Endian
+                } Wait;
+
+                struct {
+                    int32_t m_iTargetID;   // Big Endian
+                    int16_t m_wEmoteID;    // Big Endian
+                    int16_t m_wUnk;        // Big Endian
+                } Emoticon;
+
+                struct {
+                    int32_t m_iNPCID;      // Big Endian
+                    int32_t m_iScriptID;   // Big Endian
+                    int8_t  m_byPosition;
+                    int8_t  m_byAnimation;
+                    int8_t  m_byEffect;
+                    // [Variable String] Text (2 Byte Len + Char[])
+                } NPCTalk;
+            } CmdData;
+        } Dialog;
+
+        // --- ACTION 7: BOS (Battle) Results ---
+        struct
+        {
+            uint8_t m_byPadding; // 0x00 Check
+            
+            // Stats Payload
+            int32_t m_iScoreTeamA; // Big Endian
+            int32_t m_iScoreTeamB; // Big Endian
+            bool    m_bIsWinner;
+            int16_t m_wKills;      // Big Endian
+            int16_t m_wDeaths;     // Big Endian
+            int32_t m_iPoints;     // Big Endian
+            int32_t m_iExpEarned;  // Big Endian
+            int32_t m_iGoldEarned; // Big Endian
+            int32_t m_iBonusPts;   // Big Endian
+            int32_t m_iTotalScore; // Big Endian
+        } BOSResult;
+
+    } Payload;
+};
+
+#pragma pack(pop)

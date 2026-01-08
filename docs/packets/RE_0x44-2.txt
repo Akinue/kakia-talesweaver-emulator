@@ -1,0 +1,302 @@
+void __stdcall CNetwork::ProcessPacket_ScriptEvent(unsigned __int8 *pData)
+{
+  unsigned __int8 *pCursor = pData;
+
+  // 1. Connection Safety Check
+  if ( !g_pNetwork || !g_pNetwork->GetConnectionState(0, 0) )
+    return;
+
+  // 2. Read Sub-Opcode (Action Type)
+  // Originally 'v88' derived from 'v90'
+  unsigned __int8 bySubOpcode = Decoder::ReadByte_Ptr(&pCursor);
+
+  switch ( bySubOpcode )
+  {
+    case 0: // Initialize Scripted Room / Lobby
+    {
+      char szTitle[256] = {0};
+      char szPassword[256] = {0};
+
+      // Read Room Header
+      Decoder::ReadStringU8_Ptr(szTitle, &pCursor);     // sub_85E6E0
+      Decoder::ReadStringU8_Ptr(szPassword, &pCursor);  // sub_85E6E0
+      
+      int iRoomID     = Decoder::ReadInt32_BE_Ptr(&pCursor);
+      int iMapID      = Decoder::ReadInt32_BE_Ptr(&pCursor);
+      int iGameMode   = Decoder::ReadInt32_BE_Ptr(&pCursor);
+      int iMaxPlayers = Decoder::ReadInt32_BE_Ptr(&pCursor); // v87
+      int iTimeLimit  = Decoder::ReadInt32_BE_Ptr(&pCursor); // v85
+
+      // Read Dynamic Data Blocks (e.g., Allowed Items, Rules)
+      // Block A
+      byte byBlockACount = Decoder::ReadByte_Ptr(&pCursor);
+      unsigned short wBlockASize = Decoder::ReadShort_BE_Ptr(&pCursor);
+      char* pBlockA = nullptr;
+      if ( wBlockASize )
+      {
+         pBlockA = new char[wBlockASize];
+         memcpy(pBlockA, pCursor, wBlockASize); // Inline loop logic
+         pCursor += wBlockASize;
+      }
+
+      // Block B
+      unsigned short wBlockBSize = Decoder::ReadShort_BE_Ptr(&pCursor);
+      char* pBlockB = nullptr;
+      if ( wBlockBSize )
+      {
+         pBlockB = new char[wBlockBSize];
+         memcpy(pBlockB, pCursor, wBlockBSize); // Inline loop logic
+         pCursor += wBlockBSize;
+      }
+
+      // Create and Initialize Lobby Data Object (0x1C4 bytes)
+      LobbyData* pLobby = new LobbyData(); // sub_835410
+      if ( pLobby )
+      {
+          pLobby->SetInfo(szTitle, szPassword, iRoomID, iMapID, iGameMode, 
+                          iMaxPlayers, iTimeLimit, pBlockA, wBlockASize, 
+                          pBlockB, wBlockBSize); // sub_85B9B0
+      }
+
+      // Post Message to UI to Open Lobby
+      PostMessage(g_hWindow, MSG_OPEN_LOBBY, (WPARAM)pLobby, 0);
+
+      // Cleanup temporary buffers
+      if ( pBlockA ) delete[] pBlockA;
+      if ( pBlockB ) delete[] pBlockB;
+      break;
+    }
+
+    case 1: // Create Empty Lobby Data?
+    {
+      LobbyData* pLobby = new LobbyData(); // sub_835410
+      if ( pLobby )
+      {
+          pLobby->Clear(); // sub_85B9B0 with nulls
+      }
+      PostMessage(g_hWindow, MSG_OPEN_LOBBY, (WPARAM)pLobby, 0);
+      break;
+    }
+
+    case 2: // Broadcast Message / System Announcement
+    {
+      // Peek header (Packet ID + SubID) then Read Data
+      // Note: Logic here seems to re-read parts of the header or skip them
+      int iPacketID = Decoder::PeekInt32_BE(pData); 
+      pCursor += 4; 
+      int iMsgID = Decoder::PeekInt32_BE(pCursor);
+      pCursor += 4;
+      unsigned short wMsgLen = Decoder::PeekShort_BE(pCursor);
+      pCursor += 2;
+
+      char* szMessage = nullptr;
+      if ( wMsgLen )
+      {
+        szMessage = new char[wMsgLen + 1];
+        memcpy(szMessage, pCursor, wMsgLen);
+        szMessage[wMsgLen] = 0;
+        pCursor += wMsgLen;
+      }
+
+      // Create Script Broadcast Event
+      auto* pEvent = new MSG_S_EVENT_SCRIPT_BROADCAST();
+      pEvent->m_dwID = 99;
+      pEvent->m_iMsgID = iMsgID;
+      pEvent->m_szMessage = szMessage;
+
+      PostMessage(g_hWindow, MSG_DISPATCH_PACKET, (WPARAM)pEvent, 0);
+      break;
+    }
+
+    case 4: // Nested Packet: Community (Messenger)
+    {
+      // Hand off the remaining buffer to the Community Handler
+      CNetwork::ProcessPacket_Community(pCursor); // sub_841200
+      break;
+    }
+
+    case 5: // Script Command / Dialog Event
+    {
+      // Get the Event Manager (Script Engine)
+      CEventManager* pEventMgr = g_pGlobalManagers->GetEventManager(); // dword_BBCEA0
+      
+      byte byCommand = Decoder::ReadByte_Ptr(&pCursor);
+      switch ( byCommand )
+      {
+        case 0: // Set Event State / Update Title
+        {
+          char byVal1 = Decoder::ReadByte_Ptr(&pCursor);
+          char byVal2 = Decoder::ReadByte_Ptr(&pCursor);
+          pEventMgr->StartDynamicEvent(byVal1, byVal2); // sub_873D70
+          return;
+        }
+
+        case 1: // Check State
+          pEventMgr->CheckState(); // sub_865020
+          return;
+
+        case 2: // Visual Novel: Talk
+        {
+          int iSpriteID = Decoder::ReadInt32_BE_Ptr(&pCursor);
+          byte byPos = Decoder::ReadByte_Ptr(&pCursor);
+          byte byAnim = Decoder::ReadByte_Ptr(&pCursor);
+          byte byEffect = Decoder::ReadByte_Ptr(&pCursor);
+          
+          unsigned short wNameLen = Decoder::PeekShort_BE(pCursor);
+          char* szName = (char*)alloca(wNameLen + 1); // unknown_libname_10 logic
+          Decoder::ReadStringU16_Ptr(szName, &pCursor);
+
+          if ( auto* pScript = pEventMgr->GetActiveScript() ) // sub_8654B0
+          {
+             pScript->AddAction_NovelTalk(szName, iSpriteID, byPos, byAnim, byEffect); // sub_862030
+          }
+          break;
+        }
+
+        case 3: // Visual Novel: System Message
+        {
+          unsigned short wLen = Decoder::PeekShort_BE(pCursor);
+          char* szMsg = (char*)alloca(wLen + 1);
+          Decoder::ReadStringU16_Ptr(szMsg, &pCursor);
+
+          if ( auto* pScript = pEventMgr->GetActiveScript() )
+          {
+             pScript->AddAction_Message(szMsg); // sub_861B80
+          }
+          break;
+        }
+
+        case 4: // Visual Novel: Choices
+        {
+          int iDialogID = Decoder::PeekInt32_BE(pCursor);
+          pCursor += 4;
+          int iLinkID = Decoder::PeekInt32_BE(pCursor);
+          pCursor += 4;
+          
+          char byType = *pCursor++;
+          unsigned short wMainTextLen = Decoder::PeekShort_BE(pCursor);
+          char* szMainText = (char*)alloca(wMainTextLen + 1);
+          Decoder::ReadStringU16_Ptr(szMainText, &pCursor);
+
+          char byChoiceCount = *pCursor++;
+
+          if ( auto* pScript = pEventMgr->GetActiveScript() )
+          {
+             // Prepare the choice container
+             pScript->AddAction_SetChoices(byType != 0, szMainText, byChoiceCount); // sub_861C90
+
+             // Loop through choices
+             if ( byChoiceCount )
+             {
+                do
+                {
+                   unsigned short wLink = Decoder::PeekShort_BE(pCursor);
+                   unsigned short wTextLen = Decoder::PeekShort_BE(pCursor + 2); // logic inferred
+                   char* szChoice = (char*)alloca(wTextLen + 1);
+                   
+                   Decoder::ReadStringU16_Ptr(szChoice, &pCursor);
+                   
+                   pScript->AddChoice(szChoice, wLink); // sub_861D90
+                   byChoiceCount--;
+                } while ( byChoiceCount );
+             }
+             
+             // Unlock UI for input
+             pScript->AddAction_StartChoices(iDialogID, iLinkID); // sub_861E60
+          }
+          break;
+        }
+
+        case 5: // Wait / Delay
+        {
+          int iTime = Decoder::PeekInt32_BE(pCursor);
+          pCursor += 4;
+          int iType = Decoder::PeekInt32_BE(pCursor);
+          pCursor += 4;
+
+          if ( auto* pScript = pEventMgr->GetActiveScript() )
+          {
+             pScript->AddAction_Wait(iTime, iType); // sub_8622E0
+          }
+          break;
+        }
+
+        case 6: // Show Emoticon
+        {
+          int iTargetID = Decoder::ReadInt32_BE_Ptr(&pCursor);
+          short wEmoteID = Decoder::ReadShort_BE_Ptr(&pCursor);
+          short wUnk = Decoder::ReadShort_BE_Ptr(&pCursor);
+
+          if ( auto* pScript = pEventMgr->GetActiveScript() )
+          {
+             pScript->AddAction_ShowEmoticon(iTargetID, wEmoteID, wUnk); // sub_861F30
+          }
+          break;
+        }
+
+        case 7: // Standard Talk (NPC)
+        {
+          int iNPCID = Decoder::ReadInt32_BE_Ptr(&pCursor);
+          int iScriptID = Decoder::ReadInt32_BE_Ptr(&pCursor);
+          byte byPos = Decoder::ReadByte_Ptr(&pCursor);
+          byte byAnim = Decoder::ReadByte_Ptr(&pCursor);
+          byte byEffect = Decoder::ReadByte_Ptr(&pCursor);
+          
+          char szText[4096];
+          Decoder::ReadStringU16_Ptr(szText, &pCursor);
+
+          if ( auto* pScript = pEventMgr->GetActiveScript() )
+          {
+             pScript->AddAction_Talk(szText, iNPCID, iScriptID, byPos, byEffect != 0, byAnim); // sub_862150
+          }
+          break;
+        }
+      } // End Switch Command
+      break;
+    } // End Case 5
+
+    case 6: // Ranking System
+    {
+      // If the first byte is 0, process rank packet
+      if ( !Decoder::ReadByte_Ptr(&pCursor) )
+      {
+         CNetwork::ProcessPacket_Ranking(pCursor); // sub_84CCE0
+      }
+      break;
+    }
+
+    case 7: // BOS (Battle Of Schools) Results
+    {
+       // Check for BOS Result Window
+       // 0x07 implies start/show results
+       if ( !Decoder::ReadByte_Ptr(&pCursor) )
+       {
+          CBOSResultWin* pWin = InterfaceMgr::FindWindow<CBOSResultWin>(); // sub_713FF0
+          
+          if ( !pWin )
+          {
+             // Create Window if missing
+             pWin = new CBOSResultWin(); // operator new(0x384)
+             InterfaceMgr::AddWindow(pWin);
+          }
+
+          // Initialize/Reset Window
+          pWin->Reset(); 
+
+          // Read Stats Structure
+          BOSResultData stats;
+          stats.iScoreA = Decoder::ReadInt32_BE_Ptr(&pCursor);
+          stats.iScoreB = Decoder::ReadInt32_BE_Ptr(&pCursor);
+          stats.bWin    = Decoder::ReadByte_Ptr(&pCursor) != 0;
+          stats.wKills  = Decoder::ReadShort_BE_Ptr(&pCursor);
+          stats.wDeaths = Decoder::ReadShort_BE_Ptr(&pCursor);
+          stats.iPoints = Decoder::ReadInt32_BE_Ptr(&pCursor);
+          // ... read remaining stats ...
+
+          // Update UI
+          pWin->SetResultData(&stats); // sub_5DDEC0
+       }
+       break;
+    }
+  } // End Switch SubOpcode
+}

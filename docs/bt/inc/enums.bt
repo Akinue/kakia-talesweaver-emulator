@@ -117,15 +117,27 @@ enum <byte> ClientResponseCode {
     LoadingDone     = 0x05
 };
 
-// FriendDialogResponse (0x44) sub-actions
+// FriendDialogResponse (0x44) sub-actions (from RE_0x44.txt)
 enum <byte> FriendDialogActionType {
-    FriendMemoAction1       = 0x00,
-    FriendMemoAction2       = 0x01,
-    EventScriptBroadcast    = 0x02,
-    NpcDialogMenu           = 0x04,
-    NpcDialogText           = 0x05,
-    DialogResponseAction    = 0x06,
-    BossBattleResult        = 0x07,
+    ACTION_LOBBY_INIT       = 0x00, // Enter Room / Init Info
+    ACTION_LOBBY_CLEAR      = 0x01, // Clear Lobby Data
+    ACTION_BROADCAST        = 0x02, // System/Script Announcement
+    ACTION_COMMUNITY        = 0x04, // Messenger/Guild (Nested Packet)
+    ACTION_DIALOG_CMD       = 0x05, // Visual Novel / NPC Interaction
+    ACTION_RANKING          = 0x06, // Ranking Window Data
+    ACTION_BOS_RESULT       = 0x07, // Battle of Schools Result Screen
+};
+
+// Dialog sub-commands for ACTION_DIALOG_CMD (0x05) (from RE_0x44-2.txt)
+enum <byte> DialogSubCommand {
+    CMD_UPDATE_STATE        = 0x00, // Init dialog (val1, val2)
+    CMD_CHECK_STATE         = 0x01, // Close dialog
+    CMD_NOVEL_TALK          = 0x02, // Portrait + Text (visual novel)
+    CMD_SYSTEM_MSG          = 0x03, // System message
+    CMD_CHOICES             = 0x04, // Menu selection
+    CMD_WAIT                = 0x05, // Delay/Wait
+    CMD_EMOTICON            = 0x06, // Show emoticon
+    CMD_NPC_TALK            = 0x07, // Standard bubble talk
 };
 
 // Pose types

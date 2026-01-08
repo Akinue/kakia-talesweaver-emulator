@@ -1,46 +1,157 @@
 //------------------------------------------------
-//   Op: 0x44 (FriendDialogResponse)
+//   Op: 0x44 (FriendDialogResponse / ScriptEvent)
 //   Dir: Server -> Client
-//   Send: WorldServer/Send.cs - NpcDialog(), NpcMenu(), NpcDialogClose()
-//   Note: Used for NPC dialogs despite the name
+//   Send: WorldServer/Send.cs - Various NPC dialog methods
+//   RE Source: docs/packets/RE_0x44.txt, RE_0x44-2.txt, RE_0x44-3.txt
 //------------------------------------------------
 #include "inc/common.bt"
+
+// String with 2-byte BE length prefix (used by RE dialog format)
+typedef struct {
+    ushort length <bgcolor=cDkGreen>;
+    if (length > 0) {
+        char text[length] <bgcolor=cGreen>;
+    }
+} String16 <read=ReadString16>;
+
+string ReadString16(String16 &s) {
+    if (s.length > 0) return s.text;
+    return "";
+}
 
 TwHeader header;
 
 FriendDialogActionType actionType;
 
 switch (actionType) {
-    case NpcDialogText:
-        // 0x05 - Text dialog with portrait
-        ubyte subType <comment="0x01 = close, 0x02 = text with portrait">;
-        if (subType == 0x02) {
-            uint npcId;
-            uint modelId;
-            TwString text;
-            ubyte hasNext <comment="1 = show Next button">;
+    case ACTION_LOBBY_INIT:
+        // 0x00 - Initialize Scripted Room / Lobby
+        ubyte unk1;
+        TwString title;
+        TwString password;
+        uint roomId <comment="Big Endian">;
+        uint mapId <comment="Big Endian">;
+        uint gameMode <comment="Big Endian">;
+        uint maxPlayers <comment="Big Endian">;
+        uint timeLimit <comment="Big Endian">;
+        // Dynamic blocks follow...
+        break;
+
+    case ACTION_LOBBY_CLEAR:
+        // 0x01 - Clear Lobby Data (no payload)
+        break;
+
+    case ACTION_BROADCAST:
+        // 0x02 - System/Script Announcement
+        uint packetHeader <comment="Big Endian">;
+        uint messageId <comment="Big Endian">;
+        ushort textLength <comment="Big Endian">;
+        if (textLength > 0) {
+            char message[textLength];
         }
         break;
 
-    case NpcDialogMenu:
-        // 0x04 - Dialog with menu options
-        ubyte subType <comment="0x02 = menu with portrait">;
-        if (subType == 0x02) {
-            uint64 dialogId <comment="Dialog ID (Big Endian)">;
-            uint modelId;
-            TwString message;
-            ubyte optionCount;
-            if (optionCount > 0) {
-                local int i;
-                for (i = 0; i < optionCount; i++) {
-                    TwString option;
+    case ACTION_COMMUNITY:
+        // 0x04 - Messenger/Guild (Nested Packet)
+        // Remaining bytes handled by separate community handler
+        ubyte communityData[header.length - FTell() + sizeof(TwHeader)];
+        break;
+
+    case ACTION_DIALOG_CMD:
+        // 0x05 - Dialog / Visual Novel / NPC Interaction
+        DialogSubCommand subCommand;
+
+        switch (subCommand) {
+            case CMD_UPDATE_STATE:
+                // 0x00 - Init dialog state
+                ubyte val1 <comment="State value 1">;
+                ubyte val2 <comment="State value 2">;
+                break;
+
+            case CMD_CHECK_STATE:
+                // 0x01 - Close dialog (no payload)
+                break;
+
+            case CMD_NOVEL_TALK:
+                // 0x02 - Portrait dialog (visual novel style)
+                // RE format: [spriteId:4 BE] [pos:1] [anim:1] [effect:1] [name:string16]
+                uint spriteId <comment="NPC model ID for portrait">;
+                ubyte position <comment="Portrait position">;
+                ubyte animation <comment="Portrait animation">;
+                ubyte effect <comment="Visual effect">;
+                String16 text;
+                break;
+
+            case CMD_SYSTEM_MSG:
+                // 0x03 - System message
+                String16 message;
+                break;
+
+            case CMD_CHOICES:
+                // 0x04 - Menu selection
+                uint dialogId <comment="Dialog ID for tracking">;
+                uint linkId <comment="Link ID">;
+                ubyte menuType <comment="Menu type">;
+                String16 mainText;
+                ubyte choiceCount;
+                if (choiceCount > 0) {
+                    local int i;
+                    for (i = 0; i < choiceCount; i++) {
+                        String16 choice;
+                    }
                 }
-            }
+                break;
+
+            case CMD_WAIT:
+                // 0x05 - Delay/Wait
+                uint durationMs <comment="Duration in milliseconds">;
+                uint waitType <comment="Wait type">;
+                break;
+
+            case CMD_EMOTICON:
+                // 0x06 - Show emoticon
+                uint targetId <comment="Entity to show emote on">;
+                short emoteId <comment="Emote ID">;
+                short unk <comment="Unknown">;
+                break;
+
+            case CMD_NPC_TALK:
+                // 0x07 - Standard NPC bubble talk
+                uint npcId <comment="NPC entity ID">;
+                uint scriptId <comment="Script ID">;
+                ubyte position <comment="Bubble position">;
+                ubyte animation <comment="Animation">;
+                ubyte effect <comment="Effect">;
+                String16 text;
+                break;
+
+            default:
+                Printf("Unknown DialogSubCommand: %02X\n", subCommand);
+                break;
         }
         break;
 
-    case EventScriptBroadcast:
-        // Script/Event broadcast
+    case ACTION_RANKING:
+        // 0x06 - Ranking Window Data
+        ubyte rankingSubType;
+        // Further parsing depends on subtype
+        break;
+
+    case ACTION_BOS_RESULT:
+        // 0x07 - Battle of Schools Results
+        ubyte padding <comment="Should be 0x00">;
+        if (padding == 0x00) {
+            uint scoreTeamA <comment="Big Endian">;
+            uint scoreTeamB <comment="Big Endian">;
+            ubyte isWinner;
+            short kills <comment="Big Endian">;
+            short deaths <comment="Big Endian">;
+            uint points <comment="Big Endian">;
+            uint expEarned <comment="Big Endian">;
+            uint goldEarned <comment="Big Endian">;
+            uint bonusPts <comment="Big Endian">;
+            uint totalScore <comment="Big Endian">;
+        }
         break;
 
     default:

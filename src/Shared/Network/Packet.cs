@@ -260,6 +260,17 @@ namespace Kakia.TW.Shared.Network
 		}
 
 		/// <summary>
+		/// Writes a string with 2-byte (ushort) length prefix.
+		/// Used by dialog packets that expect string16 format.
+		/// </summary>
+		public void PutString16(string value)
+		{
+			var bytes = EncodingKR.GetBytes(value ?? "");
+			_buffer.WriteUInt16((ushort)bytes.Length);
+			_buffer.Write(bytes);
+		}
+
+		/// <summary>
 		/// Writes bytes to buffer.
 		/// </summary>
 		/// <param name="val"></param>

@@ -518,6 +518,101 @@ namespace Kakia.TW.World.Network
 		}
 
 		/// <summary>
+		/// CMD_NOVEL_TALK (0x05 0x02) - Portrait dialog with full RE parameters.
+		/// Alternative to NpcDialog with position/animation/effect controls.
+		/// </summary>
+		public static void NpcNovelTalk(WorldConnection conn, uint spriteId, byte position, byte animation, byte effect, string text)
+		{
+			var packet = new Packet(Op.FriendDialogResponse);
+			packet.PutByte(0x05); // ACTION_DIALOG_CMD
+			packet.PutByte(0x02); // CMD_NOVEL_TALK
+			packet.PutUInt(spriteId);
+			packet.PutByte(position);   // Portrait position
+			packet.PutByte(animation);  // Portrait animation
+			packet.PutByte(effect);     // Visual effect
+			packet.PutString16(text);
+			conn.Send(packet);
+		}
+
+		/// <summary>
+		/// CMD_SYSTEM_MSG (0x05 0x03) - System message in dialog.
+		/// </summary>
+		public static void NpcSystemMsg(WorldConnection conn, string message)
+		{
+			var packet = new Packet(Op.FriendDialogResponse);
+			packet.PutByte(0x05); // ACTION_DIALOG_CMD
+			packet.PutByte(0x03); // CMD_SYSTEM_MSG
+			packet.PutString16(message);
+			conn.Send(packet);
+		}
+
+		/// <summary>
+		/// CMD_CHOICES (0x05 0x04) - Dialog menu selection (RE-accurate version).
+		/// Alternative to NpcMenuWithPortrait using correct sub-opcode.
+		/// </summary>
+		public static void NpcChoices(WorldConnection conn, uint dialogId, uint linkId, byte type, string text, string[] options)
+		{
+			var packet = new Packet(Op.FriendDialogResponse);
+			packet.PutByte(0x05); // ACTION_DIALOG_CMD
+			packet.PutByte(0x04); // CMD_CHOICES
+			packet.PutUInt(dialogId);
+			packet.PutUInt(linkId);
+			packet.PutByte(type);
+			packet.PutString16(text);
+			packet.PutByte((byte)options.Length);
+			foreach (var opt in options)
+			{
+				packet.PutString16(opt);
+			}
+			conn.Send(packet);
+		}
+
+		/// <summary>
+		/// CMD_WAIT (0x05 0x05) - Add delay to dialog sequence.
+		/// Note: Different from NpcDialogAction which is also 0x05 0x05 but with different payload.
+		/// </summary>
+		public static void NpcDialogWait(WorldConnection conn, int durationMs, int type = 0)
+		{
+			var packet = new Packet(Op.FriendDialogResponse);
+			packet.PutByte(0x05); // ACTION_DIALOG_CMD
+			packet.PutByte(0x05); // CMD_WAIT
+			packet.PutInt(durationMs);
+			packet.PutInt(type);
+			conn.Send(packet);
+		}
+
+		/// <summary>
+		/// CMD_EMOTICON (0x05 0x06) - Show emoticon on entity during dialog.
+		/// </summary>
+		public static void NpcEmoticon(WorldConnection conn, uint targetId, short emoteId, short unk = 0)
+		{
+			var packet = new Packet(Op.FriendDialogResponse);
+			packet.PutByte(0x05); // ACTION_DIALOG_CMD
+			packet.PutByte(0x06); // CMD_EMOTICON
+			packet.PutUInt(targetId);
+			packet.PutShort(emoteId);
+			packet.PutShort(unk);
+			conn.Send(packet);
+		}
+
+		/// <summary>
+		/// CMD_NPC_TALK (0x05 0x07) - Standard NPC bubble talk (non-visual novel).
+		/// </summary>
+		public static void NpcBubbleTalk(WorldConnection conn, uint npcId, uint scriptId, byte position, byte animation, byte effect, string text)
+		{
+			var packet = new Packet(Op.FriendDialogResponse);
+			packet.PutByte(0x05); // ACTION_DIALOG_CMD
+			packet.PutByte(0x07); // CMD_NPC_TALK
+			packet.PutUInt(npcId);
+			packet.PutUInt(scriptId);
+			packet.PutByte(position);
+			packet.PutByte(animation);
+			packet.PutByte(effect);
+			packet.PutString16(text);
+			conn.Send(packet);
+		}
+
+		/// <summary>
 		/// Opens a shop window for the player.
 		/// </summary>
 		public static void OpenShop(WorldConnection conn, uint npcId, NpcShop shop)

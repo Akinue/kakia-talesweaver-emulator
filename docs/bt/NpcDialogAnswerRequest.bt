@@ -13,7 +13,16 @@ ubyte flag2 <comment="5 = dialog closed, 0 = next/response">;
 // flag2 == 5: Dialog was closed by player
 // flag2 == 0 or flag1 == 0: Simple "Next" button press
 
-if (flag2 != 5 && flag1 != 0) {
+if (flag1 == 2 && flag2 == 0)
+{
+    byte bin[177];
+    ushort padding;
+    // Menu selection response
+    uint64 dialogId <comment="Dialog ID (Big Endian)">;
+    ushort padding;
+    ubyte selectedOption <comment="0-indexed option selection">;
+}
+else if (flag2 != 5 && flag1 != 0) {
     // Menu selection response
     uint64 dialogId <comment="Dialog ID (Big Endian)">;
     ushort padding;

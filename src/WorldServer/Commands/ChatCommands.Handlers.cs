@@ -68,9 +68,17 @@ namespace Kakia.TW.World.Commands
 			this.Add("test", "", "", this.HandleTest);
 			this.Add("testdialog", "", "Test hardcoded dialog packet", this.HandleTestDialog);
 			this.Add("testdialogmenu", "", "Test hardcoded dialog packet", this.HandleTestDialogMenu);
+			this.Add("testdialogre", "", "Test RE-accurate dialog commands", this.HandleTestDialogRE);
+			this.Add("testsysmsg", "<message>", "Test system message (0x05 0x03)", this.HandleTestSysMsg);
+			this.Add("testemote", "<emoteId>", "Test emoticon on self (0x05 0x06)", this.HandleTestEmote);
+			this.Add("testbubble", "<message>", "Test bubble talk (0x05 0x07)", this.HandleTestBubble);
+			this.Add("testwait", "[ms]", "Test dialog wait (0x05 0x05)", this.HandleTestWait);
+			this.Add("testnoveltalk", "", "Test novel talk with params (0x05 0x02)", this.HandleTestNovelTalk);
+			this.Add("testchoices", "", "Test RE-style menu (0x05 0x04)", this.HandleTestChoices);
 
 			this.AddAlias("testdialog", "td");
 			this.AddAlias("testdialogmenu", "tdm");
+			this.AddAlias("testdialogre", "tdre");
 		}
 
 		private CommandResult HandleTest(Player sender, Player target, string message, string commandName, Arguments args)
@@ -281,6 +289,149 @@ namespace Kakia.TW.World.Commands
 			conn.SendRaw(packetBytes);
 			**/
 
+			return CommandResult.Okay;
+		}
+
+		/// <summary>
+		/// Test RE-accurate dialog commands - spawns NPC with new dialog methods.
+		/// </summary>
+		private CommandResult HandleTestDialogRE(Player sender, Player target, string message, string commandName, Arguments args)
+		{
+			var npc = new Npc("RE Test NPC", 2200004);
+			npc.Position = sender.Position;
+			npc.Direction = (Direction)RandomProvider.Get().Next(8);
+
+			npc.Script = async (dialog) =>
+			{
+				// Test system message
+				dialog.SystemMsg("System: Testing RE dialog commands...");
+
+				// Test visual novel with init
+				dialog.Message("This is a normal Message().");
+				dialog.NovelTalk("This is NovelTalk() with position=0, anim=0, effect=0.", 0, 0, 0);
+				dialog.Close();
+
+				// Test RE-style menu
+				var choice = await dialog.SelectRE("Which test do you want to run?",
+					"Test Emoticon",
+					"Test Bubble Talk",
+					"Test Wait",
+					"Cancel");
+
+				switch (choice)
+				{
+					case 0: // Emoticon
+						dialog.Message("Watch the NPC emote!");
+						dialog.Emoticon(1); // Emote ID 1 on NPC
+						break;
+
+					case 1: // Bubble
+						dialog.Bubble("This is a bubble message, not visual novel!");
+						break;
+
+					case 2: // Wait
+						dialog.Message("Waiting 2 seconds...");
+						dialog.Wait(2000);
+						dialog.Message("Done waiting!");
+						break;
+
+					case 3: // Cancel
+						dialog.Message("Okay, goodbye!");
+						break;
+				}
+
+				dialog.End();
+			};
+
+			sender.Instance.AddNpc(npc, true);
+			Send.SpawnHardcoded(sender.Connection, npc);
+			Msg(sender, "Spawned RE Test NPC. Click it to test new dialog commands.");
+
+			return CommandResult.Okay;
+		}
+
+		/// <summary>
+		/// Test system message (0x05 0x03).
+		/// </summary>
+		private CommandResult HandleTestSysMsg(Player sender, Player target, string message, string commandName, Arguments args)
+		{
+			var text = args.Count > 0 ? string.Join(" ", args.GetAll()) : "Test system message!";
+			Send.NpcSystemMsg(sender.Connection, text);
+			Msg(sender, $"Sent NpcSystemMsg: {text}");
+			return CommandResult.Okay;
+		}
+
+		/// <summary>
+		/// Test emoticon (0x05 0x06).
+		/// </summary>
+		private CommandResult HandleTestEmote(Player sender, Player target, string message, string commandName, Arguments args)
+		{
+			short emoteId = 1;
+			if (args.Count > 0 && short.TryParse(args.Get(0), out var id))
+				emoteId = id;
+
+			Send.NpcEmoticon(sender.Connection, target.ObjectId, emoteId);
+			Msg(sender, $"Sent NpcEmoticon: targetId={target.ObjectId}, emoteId={emoteId}");
+			return CommandResult.Okay;
+		}
+
+		/// <summary>
+		/// Test bubble talk (0x05 0x07).
+		/// </summary>
+		private CommandResult HandleTestBubble(Player sender, Player target, string message, string commandName, Arguments args)
+		{
+			var text = args.Count > 0 ? string.Join(" ", args.GetAll()) : "Hello! This is a bubble message!";
+			Send.NpcBubbleTalk(sender.Connection, target.ObjectId, 0, 0, 0, 0, text);
+			Msg(sender, $"Sent NpcBubbleTalk: {text}");
+			return CommandResult.Okay;
+		}
+
+		/// <summary>
+		/// Test dialog wait (0x05 0x05).
+		/// </summary>
+		private CommandResult HandleTestWait(Player sender, Player target, string message, string commandName, Arguments args)
+		{
+			int ms = 2000;
+			if (args.Count > 0 && int.TryParse(args.Get(0), out var duration))
+				ms = duration;
+
+			Send.NpcDialogWait(sender.Connection, ms);
+			Msg(sender, $"Sent NpcDialogWait: {ms}ms");
+			return CommandResult.Okay;
+		}
+
+		/// <summary>
+		/// Test novel talk with full parameters (0x05 0x02).
+		/// </summary>
+		private CommandResult HandleTestNovelTalk(Player sender, Player target, string message, string commandName, Arguments args)
+		{
+			// Init dialog first
+			Send.NpcDialogInit(sender.Connection);
+
+			// Send novel talk with different positions
+			Send.NpcNovelTalk(sender.Connection, 2200004, 0, 0, 0, "Position 0, Animation 0, Effect 0");
+			Send.NpcNovelTalk(sender.Connection, 2200004, 1, 1, 1, "Position 1, Animation 1, Effect 1");
+			Send.NpcNovelTalk(sender.Connection, 2200004, 2, 2, 2, "Position 2, Animation 2, Effect 2");
+
+			// Close dialog
+			Send.NpcDialogClose(sender.Connection, 0);
+
+			Msg(sender, "Sent 3 NpcNovelTalk packets with different params.");
+			return CommandResult.Okay;
+		}
+
+		/// <summary>
+		/// Test RE-style menu (0x05 0x04).
+		/// </summary>
+		private CommandResult HandleTestChoices(Player sender, Player target, string message, string commandName, Arguments args)
+		{
+			Send.NpcChoices(sender.Connection, 1, 0, 0, "RE-Style Menu Test\nPick an option:", new[] {
+				"Option A",
+				"Option B",
+				"Option C",
+				"Cancel"
+			});
+			Msg(sender, "Sent NpcChoices (0x05 0x04). Check if menu appears.");
 			return CommandResult.Okay;
 		}
 
