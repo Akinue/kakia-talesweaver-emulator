@@ -26,7 +26,7 @@ public class MovementHandler : PacketHandler
 			{
 				ObjectID = character.Id,
 				MoveType = movement.MoveType,
-				MoveSpeed = 50, //(byte)(movement.MoveType == MovementType.Run ? 27 : 15),
+				MoveSpeed = (byte)(movement.MoveType == MovementType.Run ? 27 : 15),
 				PreviousPosition = character.Position,
 				TargetPosition = movement.Position,
 				Direction = movement.Direction
